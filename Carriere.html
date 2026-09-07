@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="Rejoignez le Groupe SOLAVIH : offres d'emploi et candidatures spontanées en ingénierie informatique à Abidjan, Côte d'Ivoire." />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Bodoni+Moda:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="style.css" />
+        <style>
+            .job-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin-bottom: var(--space-4); overflow: hidden; }
+            .job-card summary { list-style: none; cursor: pointer; padding: var(--space-5); display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+            .job-card summary::-webkit-details-marker { display: none; }
+            .job-card summary h3 { margin: 0 0 6px; font-size: 1.15rem; }
+            .job-card summary .job-meta { font-size: 0.85rem; color: var(--color-text-muted); }
+            .job-card summary .job-chevron { flex-shrink: 0; width: 22px; height: 22px; color: var(--color-accent); transition: transform var(--dur-fast) var(--ease); }
+            .job-card[open] summary .job-chevron { transform: rotate(180deg); }
+            .job-body { padding: 0 var(--space-5) var(--space-5); border-top: 1px solid var(--color-border); }
+            .job-body h4 { font-size: 0.95rem; margin-top: var(--space-4); }
+            .job-body ul { padding-left: 20px; }
+            .job-body li { margin-bottom: 6px; color: var(--color-text); }
+            .job-none { text-align: center; padding: var(--space-6); border: 1px dashed var(--color-border); border-radius: var(--radius-lg); color: var(--color-text-muted); }
+        </style>
+        <script>document.documentElement.classList.add('js-enabled');</script>
+        <title>Carrières — GROUPE SOLAVIH</title>
+    </head>
+    <body>
+        <header id="entete">
+            <div class="header-inner">
+                <a id="logo" href="index.html">
+                    <img src="images/solavih_logo.png" alt="Logo Groupe SOLAVIH" />
+                </a>
+                <button class="nav-toggle" id="navToggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="mainNav">
+                    <span></span><span></span><span></span>
+                </button>
+                <nav class="site-nav" id="mainNav">
+                    <ul class="menu">
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="Nous.html">A Propos</a></li>
+                        <li class="has-sub-menu">
+                            <a href="index.html#services">Services</a>
+                            <div class="sub-menu">
+                                <div class="sub-menu-panel">
+                                    <ul class="sub-menu-list">
+                                        <li>
+                                            <a href="ServcINFOR.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Infor/PREST2.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Informatique</strong><small>Gestion de parc &amp; assistance</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcELECT.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Elect/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Électronique</strong><small>Sécurité &amp; maintenance</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcIMPRI.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Impri/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Imprimerie</strong><small>Cartes, flyers &amp; supports</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcFPROF.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Fpro/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Formations Professionnelles</strong><small>Formations certifiantes FDFP</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcMATIN.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/VMATinfo/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Matériel Informatique</strong><small>Vente &amp; équipement</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcFBURO.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/VMATinfo/PREST4.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Fournitures de Bureau</strong><small>Papeterie &amp; consommables</small></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <a href="index.html#services" class="sub-menu-footer">
+                                        Voir tous nos services
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        <li><a href="Partenaires.html">Partenaires</a></li>
+                        <li><a href="Carriere.html">Carrières</a></li>
+                        <li class="cta-item"><a href="http://localhost:8010" target="_blank" rel="noopener">Espace Client</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+        <div class="nav-backdrop" id="navBackdrop"></div>
+
+        <main>
+            <section class="page-hero hero-carriere">
+                <div class="container">
+                    <p class="breadcrumb"><a href="index.html">Accueil</a> / Carrières</p>
+                    <p class="eyebrow">Rejoignez l'équipe</p>
+                    <h1>Rejoignez une équipe qui redynamise l'Afrique</h1>
+                    <p>Discipline, esprit d'unité et respect de la personne humaine : les valeurs qui nous animent chaque jour.</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="container">
+                    <div class="split">
+                        <div class="split-copy" data-reveal="left">
+                            <p class="eyebrow">Pourquoi nous rejoindre</p>
+                            <h2>L'Afrique regorge de talents</h2>
+                            <p>Hommes et femmes sont dotés d'incroyables savoir-faire. Il est donc important que l'Afrique s'engage dans la discipline et s'imprègne de ses valeurs pour redynamiser son économie.</p>
+                            <p>C'est pourquoi le Groupe SOLAVIH, au-delà des différences, veut relever le défi technologique auquel est confrontée l'Afrique d'aujourd'hui. Car demain nous appartient, l'avenir c'est nous.</p>
+                        </div>
+                        <div class="split-media" data-reveal="right">
+                            <img src="images/equipeSolavih.png" alt="L'équipe Groupe SOLAVIH" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section section--muted" id="offres">
+                <div class="container" style="max-width: 860px;">
+                    <div class="section-head section-head--center">
+                        <p class="eyebrow" style="justify-content:center">Offres d'emploi</p>
+                        <h2>Découvrez nos offres</h2>
+                    </div>
+
+                    <details class="job-card" data-reveal="left">
+                        <summary>
+                            <div>
+                                <h3>Commercial de Terrain Freelance</h3>
+                                <span class="job-meta">Côte d'Ivoire / Abidjan · Posté le 01 août 2024 · À pourvoir avant le 31 août 2024</span>
+                            </div>
+                            <svg class="job-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </summary>
+                        <div class="job-body">
+                            <h4>Mission</h4>
+                            <p>Rechercher de nouveaux prospects sur le terrain pour la société.</p>
+                            <h4>Activités principales</h4>
+                            <ul>
+                                <li>Approcher les clients fidèles et les cibles potentielles.</li>
+                                <li>Participer à la conclusion de nouveaux contrats en présentant les produits et services, en discutant des tarifs et des conditions d'achat.</li>
+                                <li>Travail en freelance.</li>
+                                <li>Maintenir une relation client régulière (visites, appels, e-mails) pour instaurer une relation de confiance à long terme.</li>
+                            </ul>
+                            <h4>Profil exigé</h4>
+                            <ul>
+                                <li>Niveau bac ou bac+.</li>
+                                <li>Maîtrise des techniques de vente et de négociation.</li>
+                                <li>Excellente qualité rédactionnelle.</li>
+                                <li>Maîtrise des réseaux sociaux, d'Excel et de Word.</li>
+                            </ul>
+                            <p style="margin-top: var(--space-4);">Envoyez votre CV avant le 31 août 2024 à 16h00 à <a href="mailto:groupesolavih.recrutement@gmail.com?subject=COMMERCIAL%20TERRAIN">groupesolavih.recrutement@gmail.com</a>, en mentionnant « COMMERCIAL TERRAIN » en objet.</p>
+                        </div>
+                    </details>
+
+                    <details class="job-card" data-reveal="left">
+                        <summary>
+                            <div>
+                                <h3>Assistant Administration du Personnel</h3>
+                                <span class="job-meta">Secteur bancaire · Abidjan · À pourvoir avant le vendredi 11 août 2023</span>
+                            </div>
+                            <svg class="job-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </summary>
+                        <div class="job-body">
+                            <h4>Mission</h4>
+                            <p>Assurer la gestion administrative du capital humain de la banque.</p>
+                            <h4>Activités principales</h4>
+                            <ul>
+                                <li>Gérer l'accueil, traiter le courrier administratif et orienter le personnel.</li>
+                                <li>Contrôler le respect des horaires de travail.</li>
+                                <li>Effectuer les décomptes des départs définitifs et suivre les formalités de départ.</li>
+                                <li>Établir les attestations de travail et traiter les demandes de documents administratifs.</li>
+                                <li>Gérer les absences et permissions du personnel, et produire les statistiques périodiques des absences.</li>
+                            </ul>
+                            <h4>Profil exigé</h4>
+                            <ul>
+                                <li>BAC+2/3 en Ressources Humaines, Droit ou Sciences Sociales.</li>
+                                <li>2 ans minimum d'expérience RH, idéalement en gestion administrative du personnel.</li>
+                                <li>Bonne connaissance du secteur bancaire et des outils comptables et bureautiques.</li>
+                            </ul>
+                            <p style="margin-top: var(--space-4);">Envoyez votre CV et une lettre de motivation avant le 11 août 2023 à 16h00 à <a href="mailto:groupesolavih.recrutement@gmail.com?subject=ASSISTANT%20ADMINISTRATION%20DU%20PERSONNEL">groupesolavih.recrutement@gmail.com</a>, en mentionnant « ASSISTANT ADMINISTRATION DU PERSONNEL » en objet.</p>
+                        </div>
+                    </details>
+
+                    <p class="job-none" data-reveal>Aucune autre offre d'emploi disponible pour le moment.</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="container">
+                    <div class="cta-band" data-reveal="scale">
+                        <div>
+                            <h2>Pas d'offre qui vous correspond ?</h2>
+                            <p>Envoyez-nous une candidature spontanée, nous étudions chaque profil avec attention.</p>
+                        </div>
+                        <div class="cta-band-actions">
+                            <a href="mailto:groupesolavih.recrutement@gmail.com" class="btn btn--primary">Candidature spontanée</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <span class="logo-word">SOLA<span>VIH</span></span>
+                        <p>Société de services en ingénierie informatique, au service des particuliers, PME, établissements scolaires et centres de santé.</p>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Nos Services</h4>
+                        <ul>
+                            <li><a href="ServcINFOR.html">Informatique</a></li>
+                            <li><a href="ServcELECT.html">Électronique</a></li>
+                            <li><a href="ServcIMPRI.html">Imprimerie</a></li>
+                            <li><a href="ServcFPROF.html">Formations Professionnelles</a></li>
+                            <li><a href="ServcMATIN.html">Matériel Informatique</a></li>
+                            <li><a href="ServcFBURO.html">Fournitures de bureau</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Entreprise</h4>
+                        <ul>
+                            <li><a href="Nous.html#apropos">Qui sommes-nous</a></li>
+                            <li><a href="Nous.html#valeurs">Nos valeurs</a></li>
+                            <li><a href="Partenaires.html">Nos partenaires</a></li>
+                            <li><a href="Carriere.html">Carrières</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Contact</h4>
+                        <ul>
+                            <li>Quartier Bracodi, non loin de la direction générale des impôts</li>
+                            <li>03 BP 244 Abidjan 03</li>
+                            <li><a href="tel:+2252735907428">(+225) 27 359 074 28</a></li>
+                            <li><a href="mailto:groupesolavih.info@gmail.com">groupesolavih.info@gmail.com</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <span>© Groupe SOLAVIH 2022–2026. Tous droits réservés.</span>
+                    <span>www.groupesolavih.com</span>
+                </div>
+            </div>
+        </footer>
+
+        <script src="js/site.js" defer></script>
+    </body>
+</html>
