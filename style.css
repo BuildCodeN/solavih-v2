@@ -67,7 +67,16 @@ html { scroll-behavior: smooth; }
    Sans ceci, chaque clic de navigation recharge la page à froid :
    un instant de blanc, puis la bannière qui apparaît d'un coup. Cette
    règle (ignorée sans effet sur les navigateurs qui ne la supportent
-   pas encore) fait fondre l'ancienne page dans la nouvelle. */
+   pas encore) fait fondre l'ancienne page dans la nouvelle.
+   Nos pages n'ont pas toutes la même hauteur (l'accueil est bien plus
+   long que la page Partenaires, par exemple) : par défaut, le navigateur
+   étire la capture d'écran de l'ancienne page vers la taille de la
+   nouvelle pendant le fondu, ce qui déforme le contenu et donne
+   l'impression que tout "saute". object-fit:cover garde les proportions
+   de chaque capture pendant cet étirement. L'en-tête (logo + menu) est
+   lui rendu comme un élément persistant à part (voir #entete plus bas) :
+   il ne fait donc plus partie de cette capture et ne bouge plus du tout
+   d'une page à l'autre. */
 @view-transition { navigation: auto; }
 
 ::view-transition-old(root),
@@ -75,6 +84,8 @@ html { scroll-behavior: smooth; }
 {
     animation-duration: 320ms;
     animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    object-fit: cover;
+    object-position: top;
 }
 
 @media (prefers-reduced-motion: reduce)
@@ -216,6 +227,7 @@ a:focus-visible, button:focus-visible, input:focus-visible
     display: flex;
     align-items: center;
     background: rgba(248, 250, 252, 0.9);
+    view-transition-name: site-header;
     backdrop-filter: blur(10px);
     border-bottom: 1px solid transparent;
     transition: height var(--dur-medium) var(--ease), background-color var(--dur-medium) var(--ease), border-color var(--dur-medium) var(--ease);
