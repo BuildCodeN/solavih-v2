@@ -328,13 +328,10 @@
             };
             var ouVide = function (v) { return v ? v : '—'; };
 
-            gsnForm.addEventListener('submit', function (evt) {
-                evt.preventDefault();
-
-                if (!gsnForm.reportValidity()) return;
-
+            var construireMessage = function (numero) {
                 var lignes = [
                     "Bonjour SOLAVIH, je souhaite m'inscrire à un contrat GSN.",
+                    numero ? 'Référence : ' + numero : '',
                     "",
                     "Nom : " + valeurChamp('champNom'),
                     "Fonction : " + ouVide(valeurChamp('champFonction')),
@@ -354,9 +351,72 @@
                     "",
                     "Besoin : " + ouVide(valeurChamp('champBesoin'))
                 ];
+                if (!numero) { lignes.splice(1, 1); }
+                return lignes.join('\n');
+            };
 
-                var texte = encodeURIComponent(lignes.join('\n'));
-                window.open('https://wa.me/225100063355?text=' + texte, '_blank', 'noopener');
+            /* API de l'espace client — enregistre l'inscription et fournit son
+               numéro de référence. Reste tourné vers localhost tant que ce
+               backend n'est pas déployé publiquement, comme le lien Espace
+               Client dans l'en-tête : à mettre à jour ensemble le jour venu. */
+            var API_INSCRIPTIONS_GSN = 'http://localhost:8010/api/inscriptions-gsn';
+
+            var boutonEnvoi = gsnForm.querySelector('.gsn-form-submit');
+
+            gsnForm.addEventListener('submit', function (evt) {
+                evt.preventDefault();
+
+                if (!gsnForm.reportValidity()) return;
+
+                var fenetre = window.open('', '_blank');
+                if (boutonEnvoi) boutonEnvoi.classList.add('is-loading');
+
+                var ouvrirWhatsapp = function (numero) {
+                    if (boutonEnvoi) boutonEnvoi.classList.remove('is-loading');
+                    var texte = encodeURIComponent(construireMessage(numero));
+                    var url = 'https://wa.me/225100063355?text=' + texte;
+                    if (fenetre) { fenetre.location.href = url; }
+                    else { window.open(url, '_blank', 'noopener'); }
+                };
+
+                var donnees = {
+                    nom: valeurChamp('champNom'),
+                    fonction: valeurChamp('champFonction') || null,
+                    telephone: valeurChamp('champTel'),
+                    email: valeurChamp('champEmail') || null,
+                    entreprise: valeurChamp('champEntreprise') || null,
+                    localisation: valeurChamp('champLocalisation'),
+                    ville: valeurChamp('champVille'),
+                    taille: valeurChamp('champTaille') || null,
+                    urgence: valeurChamp('champUrgence') || null,
+                    besoin: valeurChamp('champBesoin') || null
+                };
+                var offreCochee = gsnForm.querySelector('input[name="offre"]:checked');
+                donnees.offre = offreCochee ? offreCochee.value : null;
+                var servicesCoches = gsnForm.querySelectorAll('input[name="services"]:checked');
+                donnees.services = servicesCoches.length ? Array.prototype.map.call(servicesCoches, function (c) { return c.value; }) : null;
+                var formationsCochees = gsnForm.querySelectorAll('input[name="formations"]:checked');
+                donnees.formations = formationsCochees.length ? Array.prototype.map.call(formationsCochees, function (c) { return c.value; }) : null;
+
+                if (!window.fetch) { ouvrirWhatsapp(null); return; }
+
+                var controleur = window.AbortController ? new AbortController() : null;
+                var minuteur = controleur ? window.setTimeout(function () { controleur.abort(); }, 2500) : null;
+
+                fetch(API_INSCRIPTIONS_GSN, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify(donnees),
+                    signal: controleur ? controleur.signal : undefined
+                }).then(function (reponse) {
+                    return reponse.ok ? reponse.json() : null;
+                }).then(function (resultat) {
+                    if (minuteur) window.clearTimeout(minuteur);
+                    ouvrirWhatsapp(resultat && resultat.numero ? resultat.numero : null);
+                }).catch(function () {
+                    if (minuteur) window.clearTimeout(minuteur);
+                    ouvrirWhatsapp(null);
+                });
             });
         }
     } catch (e) { /* le formulaire reste consultable même si l'envoi échoue */ }

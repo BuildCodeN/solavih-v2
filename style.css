@@ -1505,7 +1505,32 @@ footer { background: var(--color-foreground); color: var(--color-text-on-dark-mu
 }
 .offer-pick-card:hover { border-color: var(--color-accent-light); }
 .offer-pick-card:has(input:checked) { border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-50); }
-.offer-pick-card input { position: absolute; top: var(--space-4); right: var(--space-4); accent-color: var(--color-accent); }
+.offer-pick-card input
+{
+    appearance: none;
+    -webkit-appearance: none;
+    position: absolute;
+    top: var(--space-4); right: var(--space-4);
+    width: 22px; height: 22px;
+    margin: 0;
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--color-surface);
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease);
+}
+.offer-pick-card input::before
+{
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    transform: scale(0);
+    transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.offer-pick-card input:checked { border-color: var(--color-accent); }
+.offer-pick-card input:checked::before { transform: scale(1); }
 .offer-pick-card--featured { background: var(--color-accent-50); }
 .offer-pick-name { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; color: var(--color-primary); padding-right: var(--space-5); }
 .offer-pick-desc { font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.5; }
@@ -1526,9 +1551,53 @@ footer { background: var(--color-foreground); color: var(--color-text-on-dark-mu
 }
 .service-pick-item:hover { border-color: var(--color-accent-light); }
 .service-pick-item:has(input:checked) { border-color: var(--color-accent); background: var(--color-accent-50); }
-.service-pick-item input { margin-top: 3px; accent-color: var(--color-accent); flex-shrink: 0; }
+.service-pick-item input
+{
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    width: 20px; height: 20px;
+    margin-top: 2px;
+    border: 2px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-surface);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
+}
+.service-pick-item input::before
+{
+    content: '';
+    position: absolute;
+    top: 3px; left: 6px;
+    width: 6px; height: 10px;
+    border-right: 2.5px solid var(--color-surface);
+    border-bottom: 2.5px solid var(--color-surface);
+    transform: rotate(45deg) scale(0);
+    transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.service-pick-item input:checked { background: var(--color-accent); border-color: var(--color-accent); }
+.service-pick-item input:checked::before { transform: rotate(45deg) scale(1); }
 
-.gsn-form-submit { width: 100%; justify-content: center; margin-top: var(--space-6); }
+.gsn-form-submit { position: relative; width: 100%; justify-content: center; margin-top: var(--space-6); }
+.gsn-form-submit.is-loading { color: transparent; pointer-events: none; }
+.gsn-form-submit.is-loading::after
+{
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 18px; height: 18px;
+    margin: -9px 0 0 -9px;
+    border: 2.5px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: gsnFormSpin 700ms linear infinite;
+}
+@keyframes gsnFormSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce)
+{
+    .gsn-form-submit.is-loading::after { animation-duration: 1400ms; }
+}
 
 @media (max-width: 640px)
 {
