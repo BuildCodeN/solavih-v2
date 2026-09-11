@@ -301,4 +301,61 @@
             })(diapos[mdI]);
         }
     } catch (e) { /* le site reste pleinement utilisable sans ce diaporama */ }
+
+    /* ---------- Formulaire d'inscription GSN ---------- */
+    try {
+        var gsnForm = document.getElementById('gsnForm');
+        if (gsnForm) {
+            var champFormations = document.getElementById('champVeutFormations');
+            var blocFormations = document.getElementById('blocFormations');
+            if (champFormations && blocFormations) {
+                var syncBlocFormations = function () {
+                    blocFormations.hidden = !champFormations.checked;
+                };
+                champFormations.addEventListener('change', syncBlocFormations);
+                syncBlocFormations();
+            }
+
+            var valeurChamp = function (id) {
+                var el = document.getElementById(id);
+                return el && el.value ? el.value.trim() : '';
+            };
+            var valeursCochees = function (name) {
+                var cases = gsnForm.querySelectorAll('input[name="' + name + '"]:checked');
+                var valeurs = [];
+                for (var c = 0; c < cases.length; c++) { valeurs.push(cases[c].value); }
+                return valeurs.join(', ');
+            };
+            var ouVide = function (v) { return v ? v : '—'; };
+
+            gsnForm.addEventListener('submit', function (evt) {
+                evt.preventDefault();
+
+                if (!gsnForm.reportValidity()) return;
+
+                var lignes = [
+                    "Bonjour SOLAVIH, je souhaite m'inscrire à un contrat GSN.",
+                    "",
+                    "Nom : " + valeurChamp('champNom'),
+                    "Entreprise : " + ouVide(valeurChamp('champEntreprise')),
+                    "Ville : " + valeurChamp('champVille'),
+                    "Téléphone : " + valeurChamp('champTel'),
+                    "Email : " + ouVide(valeurChamp('champEmail')),
+                    "",
+                    "Formule souhaitée : " + ouVide(valeursCochees('offre')),
+                    "",
+                    "Services qui m'intéressent : " + ouVide(valeursCochees('services')),
+                    "Domaines de formation : " + ouVide(valeursCochees('formations')),
+                    "",
+                    "Postes à couvrir : " + ouVide(valeurChamp('champTaille')),
+                    "Urgence : " + ouVide(valeurChamp('champUrgence')),
+                    "",
+                    "Besoin : " + ouVide(valeurChamp('champBesoin'))
+                ];
+
+                var texte = encodeURIComponent(lignes.join('\n'));
+                window.open('https://wa.me/225504077445?text=' + texte, '_blank', 'noopener');
+            });
+        }
+    } catch (e) { /* le formulaire reste consultable même si l'envoi échoue */ }
 })();

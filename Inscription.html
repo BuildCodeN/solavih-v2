@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="Inscrivez-vous en ligne à un contrat GSN Groupe SOLAVIH : choisissez votre formule, précisez vos besoins par service, et recevez une proposition adaptée." />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Bodoni+Moda:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="style.css" />
+        <script>document.documentElement.classList.add('js-enabled');</script>
+        <title>Formulaire d'inscription GSN — GROUPE SOLAVIH</title>
+    </head>
+    <body>
+        <header id="entete">
+            <div class="header-inner">
+                <a id="logo" href="index.html">
+                    <img src="images/solavih_logo.png" alt="Logo Groupe SOLAVIH" />
+                </a>
+                <button class="nav-toggle" id="navToggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="mainNav">
+                    <span></span><span></span><span></span>
+                </button>
+                <nav class="site-nav" id="mainNav">
+                    <ul class="menu">
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="Nous.html">A Propos</a></li>
+                        <li class="has-sub-menu">
+                            <a href="index.html#services">Services</a>
+                            <div class="sub-menu">
+                                <div class="sub-menu-panel">
+                                    <ul class="sub-menu-list">
+                                        <li>
+                                            <a href="ServcINFOR.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Infor/PREST2.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Informatique</strong><small>Gestion de parc &amp; assistance</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcELECT.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Elect/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Électronique</strong><small>Sécurité &amp; maintenance</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcIMPRI.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Impri/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Imprimerie</strong><small>Cartes, flyers &amp; supports</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcFPROF.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Fpro/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Formations Professionnelles</strong><small>Formations certifiantes FDFP</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcMATIN.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/VMATinfo/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Matériel Informatique</strong><small>Vente &amp; équipement</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcFBURO.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/VMATinfo/PREST4.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Fournitures de Bureau</strong><small>Papeterie &amp; consommables</small></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <a href="index.html#services" class="sub-menu-footer">
+                                        Voir tous nos services
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        <li><a href="Partenaires.html">Partenaires</a></li>
+                        <li><a href="Carriere.html">Carrières</a></li>
+                        <li class="cta-item"><a href="http://localhost:8010" target="_blank" rel="noopener">Espace Client</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+        <div class="nav-backdrop" id="navBackdrop"></div>
+
+        <main>
+            <section class="page-hero hero-services">
+                <div class="container">
+                    <p class="breadcrumb"><a href="index.html">Accueil</a> / Formulaire d'inscription</p>
+                    <p class="eyebrow">Contrats GSN</p>
+                    <h1>Votre inscription, directement en ligne</h1>
+                    <p>Choisissez votre formule, précisez vos besoins par service, et notre équipe revient vers vous avec une proposition adaptée — sans rendez-vous, sans papier.</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="container container--narrow">
+
+                    <form id="gsnForm" class="gsn-form" novalidate>
+
+                        <div class="gsn-form-section">
+                            <p class="gsn-form-step">Étape 1 / 4</p>
+                            <h2>Vos coordonnées</h2>
+                            <div class="field-grid">
+                                <div class="field">
+                                    <label for="champNom">Nom complet *</label>
+                                    <input type="text" id="champNom" autocomplete="name" required />
+                                </div>
+                                <div class="field">
+                                    <label for="champTel">Téléphone (WhatsApp de préférence) *</label>
+                                    <input type="tel" id="champTel" autocomplete="tel" required />
+                                </div>
+                                <div class="field">
+                                    <label for="champEmail">Email</label>
+                                    <input type="email" id="champEmail" autocomplete="email" />
+                                </div>
+                                <div class="field">
+                                    <label for="champEntreprise">Entreprise / structure</label>
+                                    <input type="text" id="champEntreprise" placeholder="Laissez vide si vous êtes un particulier" />
+                                </div>
+                                <div class="field">
+                                    <label for="champVille">Ville / commune *</label>
+                                    <input type="text" id="champVille" autocomplete="address-level2" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="gsn-form-section">
+                            <p class="gsn-form-step">Étape 2 / 4</p>
+                            <h2>Quelle formule GSN vous intéresse ?</h2>
+                            <p class="gsn-form-hint">Le détail complet de chaque formule est présenté dans <a href="index.html#offres">nos offres GSN</a>.</p>
+                            <div class="offer-pick">
+                                <label class="offer-pick-card">
+                                    <input type="radio" name="offre" value="GSN Protect" />
+                                    <span class="offer-pick-name">GSN Protect</span>
+                                    <span class="offer-pick-desc">« Je sécurise mon système » — maintenance de base, assistance à distance, sauvegarde simple.</span>
+                                </label>
+                                <label class="offer-pick-card">
+                                    <input type="radio" name="offre" value="GSN Anticip" />
+                                    <span class="offer-pick-name">GSN Anticip</span>
+                                    <span class="offer-pick-desc">« J'anticipe les pannes et j'optimise » — maintenance planifiée, audit réseau, supervision des sauvegardes.</span>
+                                </label>
+                                <label class="offer-pick-card offer-pick-card--featured">
+                                    <input type="radio" name="offre" value="GSN Tranquillité" />
+                                    <span class="offer-pick-name">GSN Tranquillité</span>
+                                    <span class="offer-pick-desc">« Je dors tranquille » — supervision proactive complète et accompagnement stratégique trimestriel.</span>
+                                </label>
+                                <label class="offer-pick-card">
+                                    <input type="radio" name="offre" value="Je ne sais pas encore" />
+                                    <span class="offer-pick-name">Je ne sais pas encore</span>
+                                    <span class="offer-pick-desc">Je préfère être conseillé avant de choisir une formule.</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="gsn-form-section">
+                            <p class="gsn-form-step">Étape 3 / 4</p>
+                            <h2>Quels services vous intéressent ?</h2>
+                            <p class="gsn-form-hint">Cochez tout ce qui s'applique — cela nous aide à préparer votre dossier avant même notre premier échange.</p>
+                            <div class="service-pick">
+                                <label class="service-pick-item"><input type="checkbox" name="services" value="Informatique" /><span>Informatique — gestion de parc &amp; assistance</span></label>
+                                <label class="service-pick-item"><input type="checkbox" name="services" value="Électronique" /><span>Électronique — sécurité &amp; maintenance</span></label>
+                                <label class="service-pick-item"><input type="checkbox" name="services" value="Imprimerie" /><span>Imprimerie — cartes, flyers &amp; supports</span></label>
+                                <label class="service-pick-item"><input type="checkbox" name="services" value="Matériel informatique" /><span>Matériel informatique — vente &amp; équipement</span></label>
+                                <label class="service-pick-item"><input type="checkbox" name="services" value="Fournitures de bureau" /><span>Fournitures de bureau — papeterie &amp; consommables</span></label>
+                                <label class="service-pick-item"><input type="checkbox" id="champVeutFormations" name="services" value="Formations professionnelles" /><span>Formations professionnelles</span></label>
+                            </div>
+
+                            <div class="field gsn-form-sub" id="blocFormations" hidden>
+                                <label>Quels domaines de formation ?</label>
+                                <div class="service-pick service-pick--compact">
+                                    <label class="service-pick-item"><input type="checkbox" name="formations" value="Informatique et système d'information" /><span>Informatique et système d'information</span></label>
+                                    <label class="service-pick-item"><input type="checkbox" name="formations" value="Management et gestion d'entreprise" /><span>Management et gestion d'entreprise</span></label>
+                                    <label class="service-pick-item"><input type="checkbox" name="formations" value="Communication d'entreprise, marketing" /><span>Communication d'entreprise, marketing</span></label>
+                                    <label class="service-pick-item"><input type="checkbox" name="formations" value="Compétences métiers" /><span>Compétences métiers</span></label>
+                                    <label class="service-pick-item"><input type="checkbox" name="formations" value="Qualité, santé, sécurité, environnement (QSSE)" /><span>Qualité, santé, sécurité, environnement (QSSE)</span></label>
+                                    <label class="service-pick-item"><input type="checkbox" name="formations" value="Gestion de projet" /><span>Gestion de projet</span></label>
+                                    <label class="service-pick-item"><input type="checkbox" name="formations" value="Achats, vente, relation client" /><span>Achats, vente, relation client</span></label>
+                                    <label class="service-pick-item"><input type="checkbox" name="formations" value="Intelligence Artificielle" /><span>Intelligence Artificielle</span></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="gsn-form-section">
+                            <p class="gsn-form-step">Étape 4 / 4</p>
+                            <h2>Votre situation actuelle</h2>
+                            <div class="field-grid">
+                                <div class="field">
+                                    <label for="champTaille">Postes / utilisateurs à couvrir</label>
+                                    <select id="champTaille">
+                                        <option value="">—</option>
+                                        <option>1 à 5</option>
+                                        <option>6 à 15</option>
+                                        <option>16 à 50</option>
+                                        <option>Plus de 50</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label for="champUrgence">Urgence</label>
+                                    <select id="champUrgence">
+                                        <option value="">—</option>
+                                        <option>Dans la semaine</option>
+                                        <option>Ce mois-ci</option>
+                                        <option>Je me renseigne pour l'instant</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label for="champBesoin">Décrivez brièvement votre besoin ou votre situation actuelle</label>
+                                <textarea id="champBesoin" rows="4" placeholder="Ex. : nous n'avons pas de prestataire informatique attitré, notre réseau tombe régulièrement en panne…"></textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn--primary gsn-form-submit">Envoyer ma demande sur WhatsApp</button>
+                        <p class="gsn-form-hint gsn-form-hint--center">En cliquant, WhatsApp s'ouvre avec un message pré-rempli récapitulant vos réponses : il ne vous reste qu'à l'envoyer.</p>
+                        <p class="gsn-form-hint gsn-form-hint--center">Vous préférez le papier ? <a href="Documents/form_PC.pdf">Téléchargez le formulaire de contrat</a>.</p>
+                    </form>
+
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <span class="logo-word">SOLA<span>VIH</span></span>
+                        <p>Société de services en ingénierie informatique, au service des particuliers, PME, établissements scolaires et centres de santé.</p>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Nos Services</h4>
+                        <ul>
+                            <li><a href="ServcINFOR.html">Informatique</a></li>
+                            <li><a href="ServcELECT.html">Électronique</a></li>
+                            <li><a href="ServcIMPRI.html">Imprimerie</a></li>
+                            <li><a href="ServcFPROF.html">Formations Professionnelles</a></li>
+                            <li><a href="ServcMATIN.html">Matériel Informatique</a></li>
+                            <li><a href="ServcFBURO.html">Fournitures de bureau</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Entreprise</h4>
+                        <ul>
+                            <li><a href="Nous.html#apropos">Qui sommes-nous</a></li>
+                            <li><a href="Nous.html#valeurs">Nos valeurs</a></li>
+                            <li><a href="Partenaires.html">Nos partenaires</a></li>
+                            <li><a href="Carriere.html">Carrières</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Contact</h4>
+                        <ul>
+                            <li>Quartier Bracodi, non loin de la direction générale des impôts</li>
+                            <li>03 BP 244 Abidjan 03</li>
+                            <li><a href="tel:+2252735907428">(+225) 27 359 074 28</a></li>
+                            <li><a href="mailto:groupesolavih.info@gmail.com">groupesolavih.info@gmail.com</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <span>© Groupe SOLAVIH 2022–2026. Tous droits réservés.</span>
+                    <span>www.groupesolavih.com</span>
+                </div>
+            </div>
+        </footer>
+
+        <script src="js/site.js" defer></script>
+    </body>
+</html>

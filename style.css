@@ -1458,6 +1458,83 @@ footer { background: var(--color-foreground); color: var(--color-text-on-dark-mu
     .auth-form-side { padding-top: var(--space-6); }
 }
 
+/* ---------- Formulaire d'inscription GSN ---------- */
+.container--narrow { max-width: 760px; }
+
+.gsn-form-section { padding: var(--space-6) 0; border-bottom: 1px solid var(--color-border); }
+.gsn-form-section:first-child { padding-top: 0; }
+.gsn-form-section:last-of-type { border-bottom: none; }
+.gsn-form-step { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-accent); margin-bottom: var(--space-2); }
+.gsn-form-section h2 { margin-bottom: var(--space-2); }
+.gsn-form-hint { font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: var(--space-4); }
+.gsn-form-hint a { color: var(--color-accent); }
+.gsn-form-hint--center { text-align: center; }
+.gsn-form-sub { margin-top: var(--space-4); }
+
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--space-4); }
+.field-grid .field { grid-column: span 1; }
+
+.field select,
+.field textarea
+{
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    background: var(--color-surface);
+    color: var(--color-text);
+    transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.field select:focus, .field textarea:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-50); }
+.field textarea { resize: vertical; }
+
+.offer-pick { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.offer-pick-card
+{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: var(--space-4);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.offer-pick-card:hover { border-color: var(--color-accent-light); }
+.offer-pick-card:has(input:checked) { border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-50); }
+.offer-pick-card input { position: absolute; top: var(--space-4); right: var(--space-4); accent-color: var(--color-accent); }
+.offer-pick-card--featured { background: var(--color-accent-50); }
+.offer-pick-name { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; color: var(--color-primary); padding-right: var(--space-5); }
+.offer-pick-desc { font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.5; }
+
+.service-pick { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2) var(--space-4); }
+.service-pick--compact { margin-top: var(--space-2); }
+.service-pick-item
+{
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
+}
+.service-pick-item:hover { border-color: var(--color-accent-light); }
+.service-pick-item:has(input:checked) { border-color: var(--color-accent); background: var(--color-accent-50); }
+.service-pick-item input { margin-top: 3px; accent-color: var(--color-accent); flex-shrink: 0; }
+
+.gsn-form-submit { width: 100%; justify-content: center; margin-top: var(--space-6); }
+
+@media (max-width: 640px)
+{
+    .field-grid, .offer-pick, .service-pick { grid-template-columns: 1fr; }
+}
+
 @media (prefers-reduced-motion: reduce)
 {
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
