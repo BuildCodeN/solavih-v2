@@ -337,7 +337,9 @@
                     "Bonjour SOLAVIH, je souhaite m'inscrire à un contrat GSN.",
                     "",
                     "Nom : " + valeurChamp('champNom'),
+                    "Fonction : " + ouVide(valeurChamp('champFonction')),
                     "Entreprise : " + ouVide(valeurChamp('champEntreprise')),
+                    "Localisation : " + valeurChamp('champLocalisation'),
                     "Ville : " + valeurChamp('champVille'),
                     "Téléphone : " + valeurChamp('champTel'),
                     "Email : " + ouVide(valeurChamp('champEmail')),
@@ -354,7 +356,7 @@
                 ];
 
                 var texte = encodeURIComponent(lignes.join('\n'));
-                window.open('https://wa.me/225504077445?text=' + texte, '_blank', 'noopener');
+                window.open('https://wa.me/225100063355?text=' + texte, '_blank', 'noopener');
             });
         }
     } catch (e) { /* le formulaire reste consultable même si l'envoi échoue */ }
