@@ -822,6 +822,7 @@ a:focus-visible, button:focus-visible, input:focus-visible
 .card-grid > *:nth-child(4) { transition-delay: 210ms; }
 .card-grid > *:nth-child(5) { transition-delay: 280ms; }
 .card-grid > *:nth-child(6) { transition-delay: 350ms; }
+.card-grid > *:nth-child(7) { transition-delay: 420ms; }
 
 .service-card
 {
@@ -990,6 +991,25 @@ a:focus-visible, button:focus-visible, input:focus-visible
     border: 2px solid var(--color-accent);
     border-radius: 50%;
 }
+
+/* ---------- Vignette de pôle sans photo (icône à la place d'un diaporama) ---------- */
+
+.media-showcase
+{
+    aspect-ratio: 4 / 3.3;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(155deg, var(--color-primary) 0%, color-mix(in srgb, var(--color-accent) 55%, var(--color-primary)) 100%);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    text-align: center;
+}
+.media-showcase-icon { width: 120px; height: 120px; border-radius: 50%; overflow: hidden; box-shadow: 0 10px 30px rgba(2, 6, 23, 0.35); border: 2px solid rgba(248, 250, 252, 0.85); }
+.media-showcase p { color: var(--color-text-on-dark-muted); font-size: 0.95rem; max-width: 30ch; margin: 0; }
 
 /* ---------- Bandeau CTA ---------- */
 
