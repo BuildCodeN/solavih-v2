@@ -585,10 +585,7 @@ a:focus-visible, button:focus-visible, input:focus-visible
     padding: var(--space-3) var(--space-4);
     box-shadow: var(--shadow-md);
     width: 240px;
-    transition: transform 400ms var(--ease);
 }
-
-.hero-slide:not(.is-active) .hero-badge { transform: translateY(10px); }
 
 .hero-badge strong { display: block; font-family: var(--font-display); font-size: 1.3rem; color: var(--color-primary); }
 .hero-badge span { display: block; font-size: 0.82rem; color: var(--color-text-muted); min-height: 3.3em; }
