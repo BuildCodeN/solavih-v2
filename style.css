@@ -512,20 +512,27 @@ a:focus-visible, button:focus-visible, input:focus-visible
     padding-left: 72px;
 }
 
+/* Chaque ligne réserve la hauteur de son pire cas (le contenu le plus long
+   parmi les diapositives), pour que le bloc de texte garde toujours la même
+   hauteur totale et que les boutons ne sautent pas d'une diapositive à l'autre. */
+.hero-copy .eyebrow { min-height: 3.3em; }
+
 .hero-copy h1
 {
     color: var(--color-text-on-dark);
     font-size: clamp(1.85rem, 2.8vw, 2.7rem);
     line-height: 1.15;
     margin-bottom: var(--space-3);
+    min-height: 4.6em;
 }
 
-.hero-copy p
+.hero-copy p:not(.eyebrow)
 {
     color: var(--color-text-on-dark-muted);
     font-size: 1.05rem;
     max-width: 46ch;
     margin-bottom: var(--space-4);
+    min-height: 4.95em;
 }
 
 .hero-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
@@ -574,14 +581,14 @@ a:focus-visible, button:focus-visible, input:focus-visible
     border-radius: var(--radius-md);
     padding: var(--space-3) var(--space-4);
     box-shadow: var(--shadow-md);
-    max-width: 240px;
+    width: 240px;
     transition: transform 400ms var(--ease);
 }
 
 .hero-slide:not(.is-active) .hero-badge { transform: translateY(10px); }
 
 .hero-badge strong { display: block; font-family: var(--font-display); font-size: 1.3rem; color: var(--color-primary); }
-.hero-badge span { font-size: 0.82rem; color: var(--color-text-muted); }
+.hero-badge span { display: block; font-size: 0.82rem; color: var(--color-text-muted); min-height: 3.3em; }
 
 .hero-controls
 {
