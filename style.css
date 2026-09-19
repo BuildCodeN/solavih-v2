@@ -1653,3 +1653,60 @@ footer { background: var(--color-foreground); color: var(--color-text-on-dark-mu
 }
 
 /* =================================================================== */
+
+/* ============================================================
+   Programme de Récompenses Partenaires — page « Devenir partenaire commercial »
+   ============================================================ */
+.prp-principle {
+    margin: 0 0 var(--space-4);
+    padding: 0 0 0 var(--space-4);
+    border-left: 3px solid var(--color-accent);
+    font-family: var(--font-display);
+    font-size: clamp(1.35rem, 2.2vw, 1.85rem);
+    line-height: 1.35;
+    color: var(--color-text-on-dark);
+}
+
+.prp-benefits, .prp-rules { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-3); }
+.prp-benefits li, .prp-rules li { position: relative; padding-left: 28px; line-height: 1.5; }
+.prp-benefits li::before, .prp-rules li::before {
+    content: ""; position: absolute; left: 0; top: 0.5em; width: 14px; height: 8px;
+    border-left: 2px solid var(--color-accent); border-bottom: 2px solid var(--color-accent);
+    transform: rotate(-45deg) translateY(-50%);
+}
+.section--dark .prp-benefits li { color: var(--color-text-on-dark-muted); }
+
+.prp-steps {
+    counter-reset: prp-step;
+    margin: var(--space-6) 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+}
+.prp-steps li {
+    counter-increment: prp-step;
+    position: relative;
+    padding: var(--space-5) var(--space-5) var(--space-5) calc(var(--space-5) + 56px);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+.prp-steps li::before {
+    content: counter(prp-step);
+    position: absolute; left: var(--space-5); top: var(--space-5);
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--color-accent); color: #FFFFFF;
+    font-family: var(--font-display); font-size: 1.15rem; font-weight: 600;
+}
+.prp-steps strong { display: block; margin-bottom: var(--space-1); color: var(--color-primary); font-size: 1.05rem; }
+.prp-steps span { color: var(--color-text-muted); font-size: 0.95rem; }
+
+@media (max-width: 900px) { .prp-steps { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .prp-steps { grid-template-columns: 1fr; } }
+
+/* Champ piège anti-robot du formulaire GSN : hors écran, jamais visible ni annoncé. */
+.hp-field { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }

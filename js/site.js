@@ -6,6 +6,22 @@
     var prefersReducedMotion = window.matchMedia &&
         window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    /* ---------- Liens vers l'espace privé « Mon Espace » ----------
+       L'adresse vient de js/config.js (une seule valeur à changer au déploiement).
+       Un lien porte data-espace="/chemin" (ou data-espace vide pour la racine) :
+       son href est reconstruit ici ; s'il manque, le href écrit dans la page reste valable. */
+    var espaceUrl = ((window.SOLAVIH_CONFIG && window.SOLAVIH_CONFIG.espaceUrl) || '').replace(/\/+$/, '');
+
+    try {
+        if (espaceUrl) {
+            var liensEspace = document.querySelectorAll('[data-espace]');
+            for (var e = 0; e < liensEspace.length; e++) {
+                var chemin = liensEspace[e].getAttribute('data-espace') || '';
+                liensEspace[e].setAttribute('href', espaceUrl + chemin);
+            }
+        }
+    } catch (err) { /* les liens gardent leur adresse d'origine */ }
+
     /* ---------- En-tête : état au défilement ---------- */
     try {
         var header = document.getElementById('entete');
@@ -356,12 +372,32 @@
             };
 
             /* API de l'espace client — enregistre l'inscription et fournit son
-               numéro de référence. Reste tourné vers localhost tant que ce
-               backend n'est pas déployé publiquement, comme le lien Espace
-               Client dans l'en-tête : à mettre à jour ensemble le jour venu. */
-            var API_INSCRIPTIONS_GSN = 'http://localhost:8010/api/inscriptions-gsn';
+               numéro de référence. L'adresse vient de js/config.js, comme les
+               liens « Mon Espace » de l'en-tête. */
+            var API_INSCRIPTIONS_GSN = (espaceUrl || 'http://localhost:8010') + '/api/inscriptions-gsn';
 
             var boutonEnvoi = gsnForm.querySelector('.gsn-form-submit');
+
+            /* Anti-robot : Cloudflare Turnstile, seulement si une clé publique est
+               renseignée dans js/config.js (sinon, seul le champ piège protège). */
+            var jetonTurnstile = '';
+            try {
+                var cleTurnstile = (window.SOLAVIH_CONFIG && window.SOLAVIH_CONFIG.turnstileSiteKey) || '';
+                var zoneTurnstile = document.getElementById('gsnTurnstile');
+                if (cleTurnstile && zoneTurnstile) {
+                    window.solavihTurnstileReady = function () {
+                        window.turnstile.render(zoneTurnstile, {
+                            sitekey: cleTurnstile,
+                            callback: function (jeton) { jetonTurnstile = jeton; },
+                            'expired-callback': function () { jetonTurnstile = ''; }
+                        });
+                    };
+                    var scriptTurnstile = document.createElement('script');
+                    scriptTurnstile.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=solavihTurnstileReady';
+                    scriptTurnstile.async = true;
+                    document.head.appendChild(scriptTurnstile);
+                }
+            } catch (err) { /* le formulaire reste utilisable sans Turnstile */ }
 
             gsnForm.addEventListener('submit', function (evt) {
                 evt.preventDefault();
@@ -389,7 +425,10 @@
                     ville: valeurChamp('champVille'),
                     taille: valeurChamp('champTaille') || null,
                     urgence: valeurChamp('champUrgence') || null,
-                    besoin: valeurChamp('champBesoin') || null
+                    besoin: valeurChamp('champBesoin') || null,
+                    /* Champ piège : invisible pour une personne, rempli par les robots. */
+                    website: valeurChamp('champSiteWeb') || null,
+                    turnstile_token: jetonTurnstile || null
                 };
                 var offreCochee = gsnForm.querySelector('input[name="offre"]:checked');
                 donnees.offre = offreCochee ? offreCochee.value : null;

@@ -81,7 +81,7 @@
                         </li>
                         <li><a href="Partenaires.html">Partenaires</a></li>
                         <li><a href="Carriere.html">Carrières</a></li>
-                        <li class="cta-item"><a href="http://localhost:8010" target="_blank" rel="noopener">Mon Espace</a></li>
+                        <li class="cta-item"><a href="http://localhost:8010" data-espace target="_blank" rel="noopener">Mon Espace</a></li>
                     </ul>
                 </nav>
             </div>
@@ -98,13 +98,14 @@
                 <div class="auth-form-side">
                     <div class="auth-card" style="text-align:center;">
                         <p style="color:var(--color-text-muted); margin-bottom:var(--space-4);">Redirection vers votre espace…</p>
-                        <a href="http://localhost:8010" class="btn btn--primary" style="justify-content:center; width:100%;">Continuer vers Mon Espace</a>
+                        <a href="http://localhost:8010" data-espace class="btn btn--primary" style="justify-content:center; width:100%;">Continuer vers Mon Espace</a>
                     </div>
                 </div>
             </div>
         </main>
 
+        <script src="js/config.js"></script>
         <script src="js/site.js" defer></script>
-        <script>window.location.replace('http://localhost:8010');</script>
+        <script>window.location.replace((window.SOLAVIH_CONFIG && window.SOLAVIH_CONFIG.espaceUrl) || 'http://localhost:8010');</script>
     </body>
 </html>
