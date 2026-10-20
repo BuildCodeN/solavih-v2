@@ -59,6 +59,41 @@
     --header-height-mobile: 60px;
 }
 
+/* ===================================================================
+   COMMENT CHOISIR SOI-MÊME OÙ UN TITRE OU UN TEXTE PASSE À LA LIGNE
+   ===================================================================
+   Sur les gros titres et les textes d'intro (bandeaux en haut de page,
+   bandeaux « Discutons de votre projet », etc.), le nombre de lignes
+   n'est pas laissé au hasard : c'est un saut de ligne écrit à la main
+   dans le fichier HTML, avec une seule classe pour ça sur tout le
+   site : « saut-ligne ».
+
+   Pour couper un titre ou un texte à un endroit précis, dans le
+   fichier HTML de la page (pas ici) :
+
+       <h1>Premier morceau<br class="saut-ligne" /> deuxième morceau</h1>
+
+   - Le retour à la ligne apparaît à l'endroit du <br>.
+   - Sur téléphone, ce retour à la ligne disparaît tout seul (chaque
+     bandeau a son propre seuil, entre 720 et 1000 px de large selon
+     la place disponible) : le texte revient alors à la ligne tout
+     seul, là où il tient, sans jamais déborder.
+   - Un seul <br class="saut-ligne" /> = deux lignes. Deux
+     <br class="saut-ligne" /> dans le même texte = trois lignes.
+   - Ça ne marche que si le titre ou le texte n'est pas déjà limité en
+     largeur par ailleurs (ex. « max-width »). Les bandeaux du site qui
+     utilisent déjà ce système (chercher leur nom de classe dans le
+     fichier HTML de la page, sur la balise juste au-dessus du titre) :
+     hero-nous (page « A propos »), hero-partenaires (pages
+     « Partenaires » et « Partenaire commercial »), hero-services (les
+     7 pages de service), section-head--wide (chapeaux de section sur
+     l'accueil), cta-band--nous (bandeau du bas de « A propos »). Pour
+     un titre ou un texte qui n'est pas encore dans cette liste, il n'y
+     a pas encore de largeur libérée pour lui : demander l'ajout une
+     fois, puis les sauts de ligne suivants sur ce même texte se
+     modifient seul(e) en HTML.
+   =================================================================== */
+
 *, *::before, *::after { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
@@ -165,11 +200,35 @@ a:focus-visible, button:focus-visible, input:focus-visible
 .section--dark h2, .section--dark h3 { color: var(--color-text-on-dark); }
 .section--dark p { color: var(--color-text-on-dark-muted); }
 
+/* Bloc gris « Qui peut devenir partenaire commercial ? » (Partenaire-Commercial.html) :
+   moitié moins d'espace au-dessus et en dessous, et le titre se rapproche des vignettes
+   en dessous — sans toucher aux autres .section--muted du site (Nous, Carrière, accueil). */
+.section--compact { padding: var(--space-6) 0; }
+.section--compact .section-head { margin-bottom: var(--space-5); }
+
 .section-head { max-width: 640px; margin: 0 0 var(--space-6); }
 .section-head--center { margin-left: auto; margin-right: auto; text-align: center; }
 .section-head h2 { font-size: clamp(1.7rem, 2.4vw, 2.4rem); }
 .section-head p { font-size: 1.05rem; color: var(--color-text-muted); }
 .section--dark .section-head p { color: var(--color-text-on-dark-muted); }
+
+/* Chapeau « Nos pôles de solutions » : sur ordinateur, une phrase par ligne (deux lignes
+   en tout). Le titre garde sa largeur habituelle. Entre 920 et 1120 px, la taille du texte
+   suit l'écran pour que chaque phrase tienne encore sur une ligne ; en dessous de 920 px,
+   le saut de ligne disparaît et le texte passe à la ligne naturellement. */
+.section-head--wide { max-width: 1120px; }
+.section-head--wide h2 { max-width: 640px; margin-left: auto; margin-right: auto; }
+.section-head--wide p:not(.eyebrow) { text-wrap: pretty; }
+
+@media (min-width: 921px) and (max-width: 1119px)
+{
+    .section-head--wide p:not(.eyebrow) { font-size: max(0.92rem, 1.5vw); }
+}
+
+@media (max-width: 920px)
+{
+    .section-head--wide .saut-ligne { display: none; }
+}
 
 /* ---------- Boutons ---------- */
 
@@ -207,8 +266,32 @@ a:focus-visible, button:focus-visible, input:focus-visible
 .btn:hover::after { opacity: 1; }
 .btn--primary::after { background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.15)); }
 
+/* Bordure fine, lumineuse et en rotation continue autour du bouton, comme autour des
+   liens du menu (même dégradé conique, même animation) : visible au survol et au clavier. */
+.btn--orbit::after
+{
+    inset: -3px;
+    padding: 1.4px;
+    border-radius: calc(var(--radius-sm) + 3px);
+    background: conic-gradient(from var(--angle), transparent 0%, var(--orbit-color, var(--color-accent)) 12%, transparent 26%, transparent 100%);
+    animation: offerBadgeSpin 3.6s linear infinite;
+}
+.btn--orbit:hover::after,
+.btn--orbit:focus-visible::after { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce)
+{
+    .btn--orbit::after { animation: none; }
+}
+
 .btn--primary { background: var(--color-accent); color: #FFFFFF; }
 .btn--primary:hover { background: var(--color-accent-light); }
+
+/* Bouton WhatsApp : vert officiel de la marque (#25D366) et son logo ; l'anneau animé
+   (voir .btn--orbit) prend la même teinte. */
+.btn--whatsapp { --orbit-color: #1FA855; background: #1FA855; color: #FFFFFF; }
+.btn--whatsapp:hover { background: #2BBE63; }
+.btn-icon { flex: none; width: 20px; height: 20px; }
 
 .btn--ghost-dark { background: transparent; border-color: var(--color-border-on-dark); color: var(--color-text-on-dark); }
 .btn--ghost-dark:hover { border-color: var(--color-text-on-dark); background: rgba(248, 250, 252, 0.06); }
@@ -254,8 +337,8 @@ a:focus-visible, button:focus-visible, input:focus-visible
 }
 
 #logo { display: flex; align-items: center; gap: var(--space-2); }
-#logo img { height: 44px; width: auto; transition: height var(--dur-medium) var(--ease); }
-#entete.is-scrolled #logo img { height: 36px; }
+#logo img { height: 48px; width: auto; transition: height var(--dur-medium) var(--ease); }
+#entete.is-scrolled #logo img { height: 40px; }
 #logo .logo-word { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; color: var(--color-primary); letter-spacing: 0.01em; }
 #logo .logo-word span { color: var(--color-accent); }
 
@@ -479,27 +562,29 @@ a:focus-visible, button:focus-visible, input:focus-visible
     overflow: hidden;
 }
 
+/* Les trois diapositives occupent la même cellule de grille : le héro prend la
+   hauteur de la plus haute (aucun texte coupé, quelle que soit la longueur des
+   textes ou la largeur de l'écran) et toutes gardent la même hauteur, donc rien
+   ne bouge d'une diapositive à l'autre. */
 .hero-grid
 {
     position: relative;
+    display: grid;
     max-width: 1240px;
     margin: 0 auto;
-    padding: 44px var(--space-5) 44px;
-    /* Doit rester ≥ la hauteur figée de .hero-copy (voir min-height sur
-       l'eyebrow/h1/p) + le padding vertical, sinon le contenu déborde en bas
-       et l'espace au-dessus du bloc n'est plus égal à l'espace en dessous. */
-    min-height: 500px;
 }
 
 .hero-slide
 {
-    position: absolute;
-    inset: 0;
-    padding: inherit;
+    grid-area: 1 / 1;
     display: grid;
     grid-template-columns: 1.05fr 0.95fr;
     gap: var(--space-8);
     align-items: center;
+    min-height: 500px;
+    /* 64 px en bas : place pour les points de navigation, qui ne chevauchent
+       ainsi jamais les boutons. */
+    padding: 44px var(--space-5) 64px;
     opacity: 0;
     transition: opacity 1100ms ease-in-out;
     pointer-events: none;
@@ -509,33 +594,48 @@ a:focus-visible, button:focus-visible, input:focus-visible
 
 .hero-copy
 {
+    /* Remplit la hauteur commune des diapositives et cale le texte en bas : les
+       boutons restent au même endroit d'une diapositive à l'autre, quel que soit
+       le nombre de lignes des textes. L'éventuel espace en trop se place au-dessus
+       du bloc, où il ne se remarque pas. */
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
     /* Dégage la colonne de texte de la flèche gauche (positionnée en absolu
        sur le bord du héro), pour qu'un titre sur plusieurs lignes ne passe
        jamais derrière le bouton. */
     padding-left: 72px;
 }
 
-/* Chaque ligne réserve la hauteur de son pire cas (le contenu le plus long
-   parmi les diapositives), pour que le bloc de texte garde toujours la même
-   hauteur totale et que les boutons ne sautent pas d'une diapositive à l'autre. */
-.hero-copy .eyebrow { min-height: 3.3em; }
+/* Accroche : lignes équilibrées, et petit trait aligné sur la première ligne
+   (et non au milieu) quand elle passe sur deux lignes. */
+.hero-copy .eyebrow { align-items: flex-start; text-wrap: balance; }
+.hero-copy .eyebrow::before { margin-top: calc(0.825em - 0.75px); }
 
-.hero-copy h1
+/* .hero-title : classe commune au titre des 3 diapositives du héro. Une seule est
+   un vrai <h1> (la 1re, visible par défaut) ; les 2 autres sont des <h2> — même
+   poids visuel, mais on évite 3 <h1> simultanés dans le DOM (les diapositives
+   inactives restent présentes, juste en opacité 0 : un lecteur d'écran ou un
+   moteur de recherche les « voit » quand même). Corrigé le 2026-09-28. */
+.hero-copy h1,
+.hero-copy .hero-title
 {
     color: var(--color-text-on-dark);
     font-size: clamp(1.85rem, 2.8vw, 2.7rem);
     line-height: 1.15;
     margin-bottom: var(--space-3);
-    min-height: 4.6em;
+    text-wrap: balance; /* jamais un mot seul sur la dernière ligne */
 }
 
 .hero-copy p:not(.eyebrow)
 {
     color: var(--color-text-on-dark-muted);
     font-size: 1.05rem;
-    max-width: 46ch;
+    max-width: 54ch;
     margin-bottom: var(--space-4);
-    min-height: 4.95em;
+    text-wrap: pretty;
 }
 
 .hero-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
@@ -584,11 +684,15 @@ a:focus-visible, button:focus-visible, input:focus-visible
     border-radius: var(--radius-md);
     padding: var(--space-3) var(--space-4);
     box-shadow: var(--shadow-md);
-    width: 240px;
+    /* Assez large pour un titre d'une ligne (« Des partenaires engagés »), sans
+       jamais dépasser de l'image sur petit écran. */
+    width: min(300px, calc(100% - 2 * var(--space-4)));
 }
 
-.hero-badge strong { display: block; font-family: var(--font-display); font-size: 1.3rem; color: var(--color-primary); }
-.hero-badge span { display: block; font-size: 0.82rem; color: var(--color-text-muted); min-height: 3.3em; }
+/* Interligne resserré (le titre héritait de 1.65) et description réservée sur
+   deux lignes : les trois badges ont la même hauteur. */
+.hero-badge strong { display: block; font-family: var(--font-display); font-size: 1.3rem; line-height: 1.2; color: var(--color-primary); text-wrap: balance; }
+.hero-badge span { display: block; margin-top: var(--space-1); font-size: 0.82rem; line-height: 1.45; color: var(--color-text-muted); min-height: 2.9em; text-wrap: balance; }
 
 .hero-controls
 {
@@ -719,6 +823,87 @@ a:focus-visible, button:focus-visible, input:focus-visible
 .page-hero h1 { color: var(--color-text-on-dark); font-size: clamp(1.9rem, 3vw, 2.7rem); max-width: 20ch; }
 .page-hero p { color: var(--color-text-on-dark-muted); font-size: 1.05rem; max-width: 60ch; }
 
+/* Bandeau « Nos Partenaires » : accroche sur une seule ligne, titre sur deux lignes.
+   Les tailles suivent la largeur de l'écran pour que chaque ligne tienne ; sur téléphone,
+   le saut de ligne du titre est retiré et le texte passe à la ligne naturellement. */
+
+.hero-partenaires .eyebrow
+{
+    max-width: none;
+    white-space: nowrap;
+    font-size: clamp(0.7rem, calc((100vw - 120px) / 43), 1.05rem);
+}
+
+.hero-partenaires h1
+{
+    max-width: none;
+    font-size: clamp(1.5rem, calc((100vw - 3.5rem) / 25), 2.7rem);
+}
+
+/* Texte explicatif sous le titre (Partenaires.html et Partenaire-Commercial.html partagent
+   cette classe) : libéré des 60 caractères habituels pour que le saut de ligne placé dans
+   le texte tombe au bon endroit. Sous 1000 px, le saut disparaît et le texte s'enchaîne
+   naturellement (il peut alors occuper 3 à 4 lignes selon le texte de la page). */
+.hero-partenaires h1 ~ p { max-width: 1100px; }
+
+@media (max-width: 1000px)
+{
+    .hero-partenaires p .saut-ligne { display: none; }
+}
+
+@media (max-width: 720px)
+{
+    .hero-partenaires .saut-ligne { display: none; }
+    .hero-partenaires h1 { font-size: clamp(1.6rem, 6.6vw, 1.9rem); }
+}
+
+@media (max-width: 599px)
+{
+    .hero-partenaires .eyebrow { white-space: normal; font-size: 0.8rem; }
+}
+
+/* Bandeau « À propos » : titre sur quatre lignes (sauts de ligne placés dans le texte), sur toute
+   la largeur au lieu des 20 caractères habituels. Sous 760 px, les sauts disparaissent et le titre
+   passe à la ligne naturellement, de façon équilibrée. */
+.hero-nous h1 { max-width: none; text-wrap: balance; }
+/* Texte explicatif sous le titre : la première phrase tient sur une seule ligne (largeur portée à
+   940 px au lieu de 60 caractères) et la suite sur deux lignes ; les sauts de ligne sont placés dans
+   le texte. L'ombre douce garde le texte lisible là où la photo est plus claire. En dessous de
+   1000 px, la première phrase ne tient plus sur une ligne : les sauts disparaissent et le texte est
+   réparti sur trois lignes équilibrées. */
+.hero-nous h1 ~ p { max-width: 940px; text-wrap: balance; text-shadow: 0 1px 10px rgba(2, 6, 23, 0.7); }
+
+@media (max-width: 1000px)
+{
+    .hero-nous h1 ~ p { max-width: 780px; }
+    .hero-nous p .saut-ligne { display: none; }
+}
+
+@media (max-width: 760px)
+{
+    .hero-nous h1 .saut-ligne { display: none; }
+}
+
+/* Bandeaux « Service » (7 pages) : titre libéré des 20 caractères habituels ; les titres
+   longs ont leur saut de ligne placé dans le texte à un endroit choisi, les titres courts
+   tiennent naturellement sur une ligne. Le paragraphe garde sa coupure après les deux
+   points (quand il en a une) pour ne pas isoler « : » en fin de ligne. Sous 760 px, tous
+   les sauts disparaissent et le texte passe à la ligne naturellement. */
+.hero-services h1 { max-width: none; }
+.hero-services p { max-width: 900px; text-wrap: pretty; }
+
+@media (max-width: 760px)
+{
+    .hero-services .saut-ligne { display: none; }
+}
+
+/* Sur téléphone, le texte dépasse six lignes et ne peut plus être équilibré : on évite au moins
+   qu'un mot reste seul sur la dernière ligne. */
+@media (max-width: 600px)
+{
+    .hero-nous h1 ~ p { text-wrap: pretty; }
+}
+
 /* ---------- Bandeau de preuve ---------- */
 
 .proof-strip { background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
@@ -804,6 +989,39 @@ a:focus-visible, button:focus-visible, input:focus-visible
 .logo-track img { height: 44px; width: auto; object-fit: contain; opacity: 0.92; transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease); flex-shrink: 0; }
 .logo-track img:hover { opacity: 1; transform: translateY(-3px) scale(1.06); }
 
+/* Témoignages (Partenaires.html) : dans .card-grid pour profiter du même
+   comportement réactif (3 → 2 → 1 colonne) que les autres grilles de cartes. */
+.testimonial-card
+{
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+/* Citation en police courante (Jost), pas en police à empattements (Bodoni Moda,
+   réservée aux titres) : demandé le 2026-09-28, la même police que le nom/rôle un
+   peu plus bas plaisait davantage que l'empattée d'origine. Taille et interligne
+   resserrés en même temps, pour des cartes plus compactes (d'autres témoignages
+   s'ajouteront par la suite). */
+.testimonial-card p { font-family: var(--font-body); font-size: 0.98rem; line-height: 1.45; color: var(--color-foreground); margin: 0; }
+/* .testimonial-meta et non <footer> : le site a une règle globale "footer { background:
+   ...navy }" pour le pied de page tout en bas — un <footer> ici aurait hérité de ce
+   fond sombre, sur du texte resté sombre lui aussi (illisible). Vu et corrigé le
+   2026-09-27 avant toute mise en ligne. */
+.testimonial-card .testimonial-meta { display: flex; align-items: center; gap: var(--space-3); margin-top: auto; }
+/* Rond contenant le logo du partenaire (les témoignages sont réels depuis le
+   2026-09-27 — voir le commentaire au-dessus de la section dans Partenaires.html).
+   Fond blanc + "contain" : quelle que soit la forme du logo (rond, écusson,
+   rectangle…), il apparaît en entier, jamais recadré. */
+.testimonial-avatar { flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: #FFFFFF; border: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; }
+.testimonial-avatar img { width: 100%; height: 100%; object-fit: contain; padding: 3px; box-sizing: border-box; }
+.testimonial-meta strong { display: block; font-size: 0.92rem; font-weight: 600; color: var(--color-foreground); }
+.testimonial-meta span { display: block; font-size: 0.85rem; color: var(--color-text-muted); }
+
 @keyframes logoMarquee
 {
     from { transform: translateX(0); }
@@ -869,6 +1087,12 @@ a:focus-visible, button:focus-visible, input:focus-visible
 .service-card:hover .service-icon-photo { border-color: #FFFFFF; box-shadow: 0 8px 20px rgba(2, 6, 23, 0.45); }
 
 .service-card h3 { font-size: 1.1rem; margin-bottom: 6px; }
+
+/* Cartes « Qui peut devenir partenaire commercial ? » (Partenaire-Commercial.html) :
+   ce ne sont que des intitulés, sans icône ni texte — la police des titres (Bodoni
+   Moda) y tranchait avec le reste de la page. Texte courant (Jost), comme les
+   étapes juste au-dessus (« Comment ça marche ») ou le pied de page. */
+.card-grid--profils .service-card h3 { font-family: var(--font-body); }
 .service-card p { font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: var(--space-2); }
 .service-card .card-link { font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; }
 .service-card .card-link svg { width: 14px; height: 14px; transition: transform var(--dur-fast) var(--ease); }
@@ -917,6 +1141,75 @@ a:focus-visible, button:focus-visible, input:focus-visible
 }
 .split--reverse .split-media { order: 2; }
 .split-media img { border-radius: var(--radius-lg); box-shadow: var(--shadow-md); width: 100%; }
+
+/* Image (ou diaporama) volontairement plus petite que sa colonne, centrée dans
+   l'espace restant : bloc « Notre projet d'entreprise » (Nous.html) et visuel
+   d'intro des 7 pages de service (diaporama .media-diapo). */
+.split-media--sm img { display: block; width: 80%; margin: 0 auto; }
+.split-media--sm .media-diapo { width: 80%; margin: 0 auto; }
+
+/* Bloc « Pourquoi le Groupe SOLAVIH » (accueil) : colonne de texte 12 % plus large
+   (1fr → 1,12fr) ; l'image, réduite d'autant (1fr → 0,88fr), garde ses proportions.
+   Placé avant la règle « une seule colonne » du mode tablette/téléphone, qui reste prioritaire. */
+.split--text-wide { grid-template-columns: 1.12fr 0.88fr; }
+
+/* Bloc « Pourquoi nous rejoindre » (Carrières) : le texte est plus riche que sur les
+   autres pages (intro + 4 mini-cartes + phrase de conclusion) et reste la colonne la
+   plus haute même avec .split--text-wide ; ici la colonne de texte prend deux fois la
+   largeur de l'image, avec une 3e piste étroite entre les deux pour le séparateur
+   vertical (.split-divider, un simple <div> vide dans le HTML). Placé avant la règle
+   « une seule colonne » du mode tablette/téléphone (plus bas dans ce fichier), qui
+   reste prioritaire — le séparateur y est aussi masqué (inutile sur un empilement). */
+.split--divided-wide { grid-template-columns: 2fr auto 1fr; }
+.split-divider { width: 2px; align-self: stretch; background: var(--color-accent); border-radius: 1px; }
+@media (max-width: 1080px) { .split-divider { display: none; } }
+
+/* Image de .split (bloc « Pourquoi nous rejoindre », Carrières) : cadre à coins
+   arrondis + ombre prononcée. La photo s'affiche EN ENTIER, à ses proportions
+   naturelles (3 : 2) : surtout pas d'aspect-ratio + object-fit ici, qui la
+   recadreraient (3 oct. 2026, demande de l'utilisateur : « toute l'image doit être
+   visible » — l'ancien cadrage 4 / 3,4 coupait les personnes placées aux deux
+   extrémités de la photo, à gauche et à droite).
+   Remarque 2026-09-28 : ne pas ajouter d'aplat de couleur décoratif ici — testé, mais
+   avec une photo qui a déjà une dominante orange (halo derrière la carte d'Afrique,
+   intégré à l'image elle-même, pas retirable en CSS), ça surchargeait plutôt que
+   d'ajouter du raffinement. */
+.split-media--elevated { position: relative; }
+.split-media--elevated img { width: 100%; height: auto; box-shadow: var(--shadow-lg); transition: transform var(--dur-medium) var(--ease); }
+.split-media--elevated:hover img { transform: translateY(-4px); }
+
+/* Les 4 valeurs citées dans le texte d'intro (confiance, discipline, apprentissage,
+   accompagnement) reprises en mini-cartes plutôt qu'en simple liste, pour une lecture
+   plus rapide et plus soignée qu'un bloc de texte dense. Reste dans .split-copy, donc
+   contraint à la largeur de la colonne de texte — 2 colonnes, 1 seule sur petit écran.
+   Marge et padding resserrés (2026-09-28) pour que tout le bloc, intro + 4 cartes +
+   conclusion, tienne sur un écran 14 pouces sans défilement. */
+.pillar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); margin: var(--space-4) 0; }
+.pillar-card {
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    transition: box-shadow var(--dur-medium) var(--ease), transform var(--dur-medium) var(--ease);
+}
+.pillar-card:hover { box-shadow: var(--shadow-sm); transform: translateY(-3px); }
+.pillar-card .pillar-mark { display: block; width: 28px; height: 3px; border-radius: 2px; background: var(--color-accent); margin-bottom: var(--space-2); }
+.pillar-card strong { display: block; font-family: var(--font-display); font-size: 1.05rem; color: var(--color-primary); margin-bottom: 2px; }
+.pillar-card span { display: block; font-size: 0.86rem; line-height: 1.4; color: var(--color-text-muted); }
+@media (max-width: 600px) { .pillar-grid { grid-template-columns: 1fr; } }
+
+/* Dernière phrase du bloc « Pourquoi nous rejoindre », mise en avant façon citation
+   (au lieu d'un 3e paragraphe de même poids que les autres) : plus grande, en police
+   à empattements, avec un filet d'accent — conclut le bloc avec plus d'élégance. */
+.split-copy .lead-emphasis {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    line-height: 1.45;
+    color: var(--color-primary);
+    padding-left: var(--space-4);
+    border-left: 3px solid var(--color-accent);
+    margin: 0;
+}
 
 /* ---------- Diaporama miniature (visuels de service) ---------- */
 
@@ -1027,6 +1320,81 @@ a:focus-visible, button:focus-visible, input:focus-visible
 .cta-band h2 { color: var(--color-text-on-dark); font-size: clamp(1.5rem, 2.4vw, 2rem); margin-bottom: var(--space-2); max-width: 26ch; }
 .cta-band p { color: var(--color-text-on-dark-muted); margin: 0; }
 .cta-band-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+
+.cta-band.cta-band--nous { flex-direction: column; align-items: center; text-align: center; padding-top: var(--space-5); padding-bottom: var(--space-5); }
+.cta-band--nous h2 { max-width: none; }
+.cta-band--nous .cta-band-actions { justify-content: center; }
+@media (min-width: 861px) { .cta-band--nous h2 { white-space: nowrap; } }
+
+/* Bandeau « Discutons de votre projet » (accueil) : le texte à gauche, le bouton à droite,
+   séparés par un filet vertical et centrés l'un par rapport à l'autre. Fond navy avec un
+   reflet froid en haut à droite, une fine arête orange sur le bord supérieur, un filet
+   clair autour de la carte et un trait orange au-dessus du titre. Le bandeau de « A propos »
+   (cta-band--nous) garde son style centré. */
+
+.cta-band--projet
+{
+    flex-wrap: nowrap;
+    gap: var(--space-7);
+    padding: var(--space-7);
+    background:
+        linear-gradient(90deg, transparent 4%, rgba(239, 118, 24, 0.8) 50%, transparent 96%) top / 100% 1px no-repeat,
+        radial-gradient(640px 360px at 100% 0%, rgba(148, 163, 184, 0.12), transparent 70%),
+        linear-gradient(135deg, var(--color-primary) 0%, #131D35 100%);
+    background-origin: border-box;
+    border: 1px solid rgba(248, 250, 252, 0.08);
+    box-shadow: inset 0 1px 0 rgba(248, 250, 252, 0.07), var(--shadow-md);
+}
+
+.cta-band--projet .cta-band-copy { flex: 1 1 0; min-width: 0; }
+
+.cta-band--projet .cta-band-copy::before
+{
+    content: "";
+    display: block;
+    width: 44px;
+    height: 2px;
+    margin-bottom: var(--space-4);
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-accent-light));
+}
+
+.cta-band--projet .cta-band-copy h2
+{
+    max-width: none;
+    font-size: clamp(1.7rem, 2.6vw, 2.35rem);
+    margin-bottom: var(--space-3);
+    text-wrap: balance;
+}
+
+.cta-band--projet .cta-band-copy p { max-width: 62ch; line-height: 1.7; text-wrap: pretty; }
+
+.cta-band--projet .cta-band-actions
+{
+    flex: none;
+    align-self: stretch;
+    align-items: center;
+    padding-left: var(--space-7);
+    border-left: 1px solid rgba(248, 250, 252, 0.1);
+}
+
+.cta-band--projet .btn { padding: 16px 30px; font-size: 1rem; box-shadow: 0 12px 28px -14px rgba(31, 168, 85, 0.55); }
+.cta-band--projet .btn:hover { transform: translateY(-2px); }
+
+/* En dessous de 1040 px, le texte puis le bouton s'empilent ; le filet devient horizontal. */
+@media (max-width: 1040px)
+{
+    .cta-band--projet { flex-direction: column; align-items: flex-start; gap: var(--space-5); padding: var(--space-6); }
+    .cta-band--projet .cta-band-copy { flex: none; width: 100%; }
+    .cta-band--projet .cta-band-actions { align-self: auto; width: 100%; padding: var(--space-5) 0 0; border-left: 0; border-top: 1px solid rgba(248, 250, 252, 0.1); }
+}
+
+/* Sur téléphone, le libellé du bouton doit tenir sur une seule ligne (dès 360 px de large). */
+@media (max-width: 480px)
+{
+    .cta-band--projet { padding: var(--space-5) var(--space-4); }
+    .cta-band--projet .btn { padding: 14px 12px; font-size: 0.82rem; text-align: center; text-wrap: balance; }
+}
 
 /* ---------- Offres GSN (formules d'accompagnement) ---------- */
 
@@ -1222,28 +1590,28 @@ a:focus-visible, button:focus-visible, input:focus-visible
 
 /* ---------- Pied de page ---------- */
 
-footer { background: var(--color-foreground); color: var(--color-text-on-dark-muted); }
+footer { background: var(--color-foreground); color: var(--color-text-on-dark-muted); line-height: 1.45; }
 .footer-grid
 {
     display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr 1.1fr;
+    grid-template-columns: 1.54fr 1.11fr 0.82fr 1.03fr;
     gap: var(--space-6);
-    padding: var(--space-8) 0 var(--space-6);
+    padding: var(--space-6) 0 var(--space-4);
 }
 .footer-brand .logo-word { color: var(--color-text-on-dark); font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; }
 .footer-brand .logo-word span { color: var(--color-accent-light); }
-.footer-brand p { color: var(--color-text-on-dark-muted); font-size: 0.9rem; max-width: 32ch; margin-top: var(--space-3); }
+.footer-brand p { color: var(--color-text-on-dark-muted); font-size: 0.9rem; margin-top: var(--space-2); line-height: 1.5; }
 
-.footer-col h4 { color: var(--color-text-on-dark); font-family: var(--font-body); font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: var(--space-4); }
+.footer-col h3 { color: var(--color-text-on-dark); font-family: var(--font-body); font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: var(--space-3); }
 .footer-col ul { list-style: none; margin: 0; padding: 0; }
-.footer-col li { margin-bottom: var(--space-2); }
+.footer-col li { margin-bottom: var(--space-1); }
 .footer-col a { color: var(--color-text-on-dark-muted); font-size: 0.92rem; transition: color var(--dur-fast) var(--ease); }
 .footer-col a:hover { color: var(--color-text-on-dark); }
 
 .footer-bottom
 {
     border-top: 1px solid var(--color-border-on-dark);
-    padding: var(--space-4) 0;
+    padding: var(--space-3) 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1320,11 +1688,13 @@ footer { background: var(--color-foreground); color: var(--color-text-on-dark-mu
 
 @media (max-width: 1080px)
 {
-    .hero-grid { min-height: 760px; }
-    .hero-slide { grid-template-columns: 1fr; padding-top: calc(var(--header-height) + var(--space-6)); gap: var(--space-5); overflow-y: auto; }
+    /* Une colonne : le texte prend la place restante et l'image reste calée en bas,
+       donc elle ne bouge pas d'une diapositive à l'autre (plus de défilement interne). */
+    .hero-slide { grid-template-columns: 1fr; grid-template-rows: 1fr auto; min-height: 0; padding-top: var(--space-6); gap: var(--space-5); }
     .hero-copy { padding-left: 0; }
     .hero-media { max-width: 480px; aspect-ratio: 16 / 10; }
-    .hero-arrow { width: 38px; height: 38px; font-size: 1rem; }
+    /* Flèches en bas, de part et d'autre des points : au milieu, elles passaient sur le texte. */
+    .hero-arrow { top: auto; bottom: 7px; transform: none; width: 34px; height: 34px; font-size: 1rem; }
     .proof-grid { grid-template-columns: repeat(2, 1fr); row-gap: var(--space-5); }
     .card-grid, .card-grid--4, .card-grid--5 { grid-template-columns: repeat(2, 1fr); }
     .split, .split--reverse .split-media { grid-template-columns: 1fr; }
@@ -1385,7 +1755,7 @@ footer { background: var(--color-foreground); color: var(--color-text-on-dark-mu
     .nav-backdrop.is-open { opacity: 1; pointer-events: auto; }
 
     #entete, #entete.is-scrolled { height: var(--header-height-mobile); }
-    #logo img, #entete.is-scrolled #logo img { height: 34px; }
+    #logo img, #entete.is-scrolled #logo img { height: 40px; }
     .separateur { height: var(--header-height-mobile); }
     .page-hero { padding-top: calc(var(--header-height-mobile) + var(--space-6)); }
 
@@ -1401,6 +1771,11 @@ footer { background: var(--color-foreground); color: var(--color-text-on-dark-mu
     .proof-grid { grid-template-columns: 1fr 1fr; }
     .hero-actions, .cta-band-actions { width: 100%; }
     .hero-actions .btn, .cta-band-actions .btn { flex: 1; justify-content: center; }
+    /* Boutons du héro l'un sous l'autre : côte à côte, leurs libellés se coupaient sur deux lignes. */
+    .hero-copy .hero-actions { flex-direction: column; }
+    .hero-copy .hero-actions .btn { flex: none; }
+    /* Titre un peu plus petit sur les téléphones étroits (4 lignes à 360 px sinon). */
+    .hero-copy h1, .hero-copy .hero-title { font-size: clamp(1.6rem, 7.2vw, 1.85rem); }
 }
 
 /* ---------- Connexion / Espace client ---------- */
@@ -1668,6 +2043,18 @@ footer { background: var(--color-foreground); color: var(--color-text-on-dark-mu
 }
 
 .prp-benefits, .prp-rules { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-3); }
+/* « Bon à savoir » (Partenaire-Commercial.html) : chaque règle sur une seule ligne
+   au lieu de deux — la phrase la plus longue a besoin de 760px, d'où ce plafond à
+   820px (marge confortable) plutôt que la largeur pleine du conteneur (1240px),
+   pour ne pas laisser un grand vide à droite de chaque ligne. Centré comme le titre
+   au-dessus (voir .container sans --narrow sur cette section, ligne HTML). */
+.prp-rules--large { max-width: 820px; margin-left: auto; margin-right: auto; }
+/* Le "nowrap" est réservé à partir de 900px : en dessous, le conteneur devient plus
+   étroit que le texte et forcer une seule ligne ferait déborder la page sur tablette
+   et téléphone. Sous 900px, chaque règle repasse sur 2-3 lignes normalement. */
+@media (min-width: 900px) {
+    .prp-rules--large li { white-space: nowrap; }
+}
 .prp-benefits li, .prp-rules li { position: relative; padding-left: 28px; line-height: 1.5; }
 .prp-benefits li::before, .prp-rules li::before {
     content: ""; position: absolute; left: 0; top: 0.5em; width: 14px; height: 8px;
@@ -1675,6 +2062,38 @@ footer { background: var(--color-foreground); color: var(--color-text-on-dark-mu
     transform: rotate(-45deg) translateY(-50%);
 }
 .section--dark .prp-benefits li { color: var(--color-text-on-dark-muted); }
+
+/* Bloc « Deux formes de partenariat » (Partenaires.html, section sombre) : deux
+   panneaux « verre dépoli » posés sur le fond marine, plutôt qu'un bloc de texte à
+   côté d'une photo. Fond et bordure translucides = mêmes teintes que .btn--ghost-dark
+   (rgba(248,250,252, …)), pour rester dans le vocabulaire visuel déjà utilisé sur
+   fond sombre ailleurs sur le site. */
+.partner-modes { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-5); margin-top: var(--space-6); }
+.partner-mode-card {
+    padding: var(--space-6);
+    background: rgba(248, 250, 252, 0.05);
+    border: 1px solid var(--color-border-on-dark);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    transition: background-color var(--dur-medium) var(--ease), border-color var(--dur-medium) var(--ease), transform var(--dur-medium) var(--ease);
+}
+.partner-mode-card:hover { background: rgba(248, 250, 252, 0.08); border-color: rgba(248, 250, 252, 0.28); transform: translateY(-4px); }
+.partner-mode-tag {
+    align-self: flex-start;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--color-accent-light);
+    padding: 4px 10px;
+    border: 1px solid rgba(255, 143, 63, 0.4);
+    border-radius: 999px;
+    margin-bottom: var(--space-4);
+}
+.partner-mode-card h3 { margin-bottom: var(--space-3); }
+.partner-mode-card p { flex-grow: 1; margin-bottom: var(--space-5); }
+.partner-mode-card .btn { align-self: flex-start; }
+@media (max-width: 760px) { .partner-modes { grid-template-columns: 1fr; } }
 
 .prp-steps {
     counter-reset: prp-step;

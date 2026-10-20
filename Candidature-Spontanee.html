@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="Envoyez votre candidature spontanée au Groupe MSIS-CI : parlez-nous de votre profil, nous l'étudions avec attention et vous recontactons dès qu'une opportunité correspond." />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Bodoni+Moda:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="style.css" />
+        <link rel="icon" type="image/png" sizes="192x192" href="images/LOGO/MSIS-CI/msis_icon.png" />
+        <link rel="apple-touch-icon" href="images/LOGO/MSIS-CI/msis_apple-touch-icon.png" />
+        <style>
+            /* Page « Candidature spontanée » : colonne de réassurance (comment ça
+               marche + confidentialité) à côté du formulaire, présenté dans un
+               panneau surélevé plutôt que posé à plat sur le fond de la section —
+               plus soigné que le formulaire GSN (Inscription.html), qui n'a qu'une
+               seule colonne. Le formulaire lui-même réutilise tel quel le système
+               .gsn-form/.field de style.css (mêmes classes que le formulaire GSN),
+               pour rester cohérent avec le reste du site. */
+            .apply-layout { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: var(--space-8); align-items: start; }
+            .apply-intro { position: sticky; top: calc(var(--header-height) + var(--space-6)); }
+            .apply-intro .prp-steps { margin-top: var(--space-5); }
+            .apply-note { margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--color-border); font-size: 0.88rem; color: var(--color-text-muted); }
+            .apply-panel { background: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: var(--space-7); }
+            @media (max-width: 1080px) {
+                .apply-layout { grid-template-columns: 1fr; }
+                .apply-intro { position: static; }
+            }
+            @media (max-width: 600px) {
+                .apply-panel { padding: var(--space-5); }
+                .wizard-nav { flex-direction: column; align-items: stretch; gap: var(--space-3); }
+                .wizard-nav .wizard-back { width: 100%; }
+                .wizard-nav .wizard-next, .wizard-nav .gsn-form-submit { margin-left: 0; width: 100%; }
+            }
+
+            /* Formulaire en 4 étapes (au lieu d'un formulaire GSN classique tout sur
+               une page) : barre de progression + un seul bloc de champs visible à la
+               fois, dernière étape = récapitulatif modifiable avant l'envoi. Tout est
+               géré par js/site.js (voir « Assistant de candidature »). */
+            .wizard-progress-bar { height: 6px; border-radius: 3px; background: var(--color-border); overflow: hidden; margin-bottom: var(--space-5); }
+            .wizard-progress-fill { display: block; height: 100%; width: 25%; background: var(--color-accent); border-radius: 3px; transition: width var(--dur-medium) var(--ease); }
+            .wizard-progress-steps { display: flex; justify-content: space-between; list-style: none; margin: 0 0 var(--space-6); padding: 0; }
+            .wizard-progress-step { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; text-align: center; }
+            .wizard-progress-dot {
+                width: 30px; height: 30px; border-radius: 50%;
+                display: flex; align-items: center; justify-content: center;
+                background: var(--color-surface-muted); border: 2px solid var(--color-border);
+                color: var(--color-text-muted); font-family: var(--font-display); font-size: 0.9rem; font-weight: 600;
+                transition: background-color var(--dur-medium) var(--ease), border-color var(--dur-medium) var(--ease), color var(--dur-medium) var(--ease);
+            }
+            .wizard-progress-name { font-size: 0.75rem; color: var(--color-text-muted); transition: color var(--dur-medium) var(--ease); }
+            .wizard-progress-step.is-active .wizard-progress-dot { background: var(--color-accent); border-color: var(--color-accent); color: #FFFFFF; }
+            .wizard-progress-step.is-active .wizard-progress-name { color: var(--color-primary); font-weight: 600; }
+            .wizard-progress-step.is-done .wizard-progress-dot { background: var(--color-accent-50); border-color: var(--color-accent); color: transparent; font-size: 0; }
+            .wizard-progress-step.is-done .wizard-progress-dot::before { content: "✓"; font-size: 0.95rem; color: var(--color-accent); }
+            @media (max-width: 480px) { .wizard-progress-name { display: none; } }
+
+            .wizard-step { display: none; }
+            .wizard-step.is-active { display: block; animation: wizardStepIn var(--dur-medium) var(--ease); }
+            @keyframes wizardStepIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+            @media (prefers-reduced-motion: reduce) { .wizard-step.is-active { animation: none; } }
+
+            .wizard-nav { display: flex; align-items: center; margin-top: var(--space-6); }
+            .wizard-nav .wizard-next, .wizard-nav .gsn-form-submit { margin-left: auto; }
+            /* .gsn-form-submit porte son propre margin-top (style.css), pensé pour le
+               formulaire GSN classique où il est seul en bas de page. Ici il est à
+               côté de Précédent dans .wizard-nav (qui a déjà son propre espacement
+               au-dessus) : sans l'annuler, le bouton se retrouve décalé plus bas que
+               Précédent au lieu d'être aligné avec lui. */
+            .wizard-nav .gsn-form-submit { margin-top: 0; }
+            /* Uniquement au-dessus de 600px (donc jamais en conflit avec le bloc
+               "@media (max-width: 600px)" plus haut, qui empile les boutons en pleine
+               largeur) : le bouton final n'a pas besoin de prendre toute la largeur du
+               panneau à côté de Précédent, on lui rend une taille de bouton normale,
+               plus discrète, avec la même police que Précédent/Continuer pour que les
+               deux restent à la même hauteur. */
+            @media (min-width: 601px) {
+                .wizard-nav .btn { font-size: 0.85rem; }
+                .wizard-nav .gsn-form-submit { width: auto; padding: 13px 22px; }
+            }
+            /* Même séparateur qu'au-dessus des boutons (bordure des .wizard-recap-section)
+               repris sous les boutons, avant le texte d'aide : encadre la barre d'actions
+               au lieu de la laisser flotter entre le récapitulatif et le texte. */
+            .wizard-nav + .gsn-form-hint { margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+
+            /* Repère "ÉTAPE X / 4" : même rôle que .eyebrow (petit repère avant un grand
+               titre), mais un trait long plutôt qu'un tiret court, placé au-dessus plutôt
+               qu'à côté — pour séparer nettement chaque étape de la barre de progression
+               au-dessus. Gris (comme les séparateurs déjà utilisés dans ce formulaire),
+               pas orange : sur un trait aussi long et répété à chaque étape, l'orange
+               deviendrait vite criard ; l'orange reste réservé aux courts repères. */
+            .gsn-form-step::before { content: ""; display: block; width: 100%; height: 1px; background: var(--color-border); margin-bottom: var(--space-4); }
+
+            .field-hint { margin: 6px 0 0; font-size: 0.82rem; color: var(--color-text-muted); }
+            .field input[type="file"] { padding: 9px 14px; cursor: pointer; }
+            .field input[type="file"]::file-selector-button {
+                margin-right: var(--space-3);
+                padding: 8px 16px;
+                border: none;
+                border-radius: var(--radius-sm);
+                background: var(--color-accent-50);
+                color: var(--color-accent-dark);
+                font-family: var(--font-body);
+                font-weight: 600;
+                font-size: 0.88rem;
+                cursor: pointer;
+                transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+            }
+            .field input[type="file"]::file-selector-button:hover { background: var(--color-accent); color: #FFFFFF; }
+
+            .wizard-recap-section { padding: var(--space-4) 0; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; gap: var(--space-4); }
+            .wizard-recap-section:first-child { padding-top: 0; }
+            .wizard-recap-section dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 5px var(--space-3); font-size: 0.92rem; }
+            .wizard-recap-section dt { color: var(--color-text-muted); }
+            .wizard-recap-section dd { margin: 0; color: var(--color-text); font-weight: 500; }
+            .wizard-recap-edit { flex-shrink: 0; background: none; border: none; color: var(--color-accent); font-size: 0.85rem; font-weight: 600; cursor: pointer; padding: 0; align-self: flex-start; }
+            .wizard-recap-edit:hover { text-decoration: underline; }
+        </style>
+        <script>document.documentElement.classList.add('js-enabled');</script>
+        <title>Candidature spontanée — GROUPE MSIS-CI</title>
+    </head>
+    <body>
+        <header id="entete">
+            <div class="header-inner">
+                <a id="logo" href="index.html">
+                    <img src="images/LOGO/MSIS-CI/msis_logo.png" alt="Logo Groupe MSIS-CI" width="480" height="155" />
+                </a>
+                <button class="nav-toggle" id="navToggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="mainNav">
+                    <span></span><span></span><span></span>
+                </button>
+                <nav class="site-nav" id="mainNav">
+                    <ul class="menu">
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="Nous.html">A Propos</a></li>
+                        <li class="has-sub-menu">
+                            <a href="index.html#services">Services</a>
+                            <div class="sub-menu">
+                                <div class="sub-menu-panel">
+                                    <ul class="sub-menu-list">
+                                        <li>
+                                            <a href="ServcINFOR.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Infor/PREST2.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Informatique &amp; Solutions numériques</strong><small>Réseaux, maintenance &amp; conseil</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcELECT.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Elect/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Sécurité &amp; Équipements électroniques</strong><small>Vidéosurveillance &amp; câblage</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcIMPRI.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Impri/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Communication visuelle &amp; Tous travaux d'imprimerie</strong><small>Cartes, flyers &amp; supports</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcFPROF.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Fpro/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Formations professionnelles</strong><small>Formations certifiantes FDFP</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcMATIN.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/VMATinfo/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Matériel informatique</strong><small>Vente &amp; équipement</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcFBURO.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/VMATinfo/PREST4.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Mobilier &amp; Fournitures de bureau</strong><small>Mobilier &amp; papeterie</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcMATCO.html">
+                                                <span class="sub-menu-icon"><svg viewBox="0 0 40 40" width="100%" height="100%" aria-hidden="true"><rect width="40" height="40" fill="#EF7618"/><g fill="#FFFFFF" fill-opacity="0.92"><rect x="2" y="6" width="15" height="7" rx="1"/><rect x="21" y="6" width="17" height="7" rx="1"/><rect x="-4" y="16.5" width="15" height="7" rx="1"/><rect x="13" y="16.5" width="15" height="7" rx="1"/><rect x="30" y="16.5" width="14" height="7" rx="1"/><rect x="2" y="27" width="15" height="7" rx="1"/><rect x="21" y="27" width="17" height="7" rx="1"/></g></svg></span>
+                                                <span class="sub-menu-text"><strong>Matériaux de construction &amp; ménagement</strong><small>Sable, gravier &amp; rénovation</small></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <a href="index.html#services" class="sub-menu-footer">
+                                        Voir tous nos services
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        <li><a href="Partenaires.html">Partenaires</a></li>
+                        <li><a href="Carriere.html">Carrières</a></li>
+                        <li class="cta-item"><a href="http://localhost:8010" data-espace target="_blank" rel="noopener">Mon Espace</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+        <div class="nav-backdrop" id="navBackdrop"></div>
+
+        <main>
+            <section class="page-hero hero-carriere">
+                <div class="container">
+                    <p class="breadcrumb"><a href="index.html">Accueil</a> / <a href="Carriere.html">Carrières</a> / Candidature spontanée</p>
+                    <p class="eyebrow">Candidature spontanée</p>
+                    <h1>Parlez-nous de vous, même sans offre publiée</h1>
+                    <p>Aucune offre ne correspond exactement à votre profil aujourd'hui ? Présentez-vous : nous étudions chaque candidature avec attention et vous recontactons dès qu'une opportunité se présente.</p>
+                </div>
+            </section>
+
+            <section class="section section--muted">
+                <div class="container">
+                    <div class="apply-layout">
+                        <div class="apply-intro" data-reveal="left">
+                            <p class="eyebrow">Comment ça marche</p>
+                            <h2>Une candidature, trois étapes</h2>
+                            <ol class="prp-steps" style="grid-template-columns: 1fr;">
+                                <li data-reveal="scale"><strong>Remplissez le formulaire</strong><span>Vos coordonnées et quelques informations sur votre profil.</span></li>
+                                <li data-reveal="scale"><strong>Envoyez-le sur WhatsApp</strong><span>En un clic, avec votre CV en pièce jointe.</span></li>
+                                <li data-reveal="scale"><strong>Nous vous recontactons</strong><span>Notre équipe étudie votre profil et revient vers vous si une opportunité correspond.</span></li>
+                            </ol>
+                            <p class="apply-note">Vos informations restent confidentielles et ne sont utilisées que dans le cadre de nos recrutements. Vous pouvez aussi nous écrire directement à <a href="mailto:groupemsisci@gmail.com">groupemsisci@gmail.com</a>.</p>
+                        </div>
+
+                        <div class="apply-panel" data-reveal="right">
+                            <div class="wizard-progress">
+                                <div class="wizard-progress-bar"><span class="wizard-progress-fill" id="wizardFill"></span></div>
+                                <ol class="wizard-progress-steps" id="wizardProgressSteps">
+                                    <li class="wizard-progress-step is-active" data-step="1"><span class="wizard-progress-dot">1</span><span class="wizard-progress-name">Coordonnées</span></li>
+                                    <li class="wizard-progress-step" data-step="2"><span class="wizard-progress-dot">2</span><span class="wizard-progress-name">Profil</span></li>
+                                    <li class="wizard-progress-step" data-step="3"><span class="wizard-progress-dot">3</span><span class="wizard-progress-name">CV &amp; message</span></li>
+                                    <li class="wizard-progress-step" data-step="4"><span class="wizard-progress-dot">4</span><span class="wizard-progress-name">Vérification</span></li>
+                                </ol>
+                            </div>
+
+                            <form id="candidatureForm" class="gsn-form" novalidate>
+
+                                <div class="wizard-step is-active" data-step="1">
+                                    <p class="gsn-form-step">Étape 1 / 4</p>
+                                    <h2>Vos coordonnées</h2>
+                                    <div class="field-grid">
+                                        <div class="field">
+                                            <label for="candNom">Nom complet *</label>
+                                            <input type="text" id="candNom" autocomplete="name" required />
+                                        </div>
+                                        <div class="field">
+                                            <label for="candTel">Téléphone (WhatsApp de préférence) *</label>
+                                            <input type="tel" id="candTel" autocomplete="tel" required />
+                                        </div>
+                                        <div class="field">
+                                            <label for="candEmail">Email</label>
+                                            <input type="email" id="candEmail" autocomplete="email" />
+                                        </div>
+                                    </div>
+                                    <div class="wizard-nav">
+                                        <button type="button" class="btn btn--primary wizard-next">Continuer</button>
+                                    </div>
+                                </div>
+
+                                <div class="wizard-step" data-step="2">
+                                    <p class="gsn-form-step">Étape 2 / 4</p>
+                                    <h2>Votre profil</h2>
+                                    <div class="field-grid">
+                                        <div class="field">
+                                            <label for="candDomaine">Domaine qui vous intéresse *</label>
+                                            <select id="candDomaine" required>
+                                                <option value="" selected disabled>Choisissez un domaine</option>
+                                                <option>Informatique &amp; Solutions numériques</option>
+                                                <option>Sécurité &amp; Équipements électroniques</option>
+                                                <option>Communication visuelle &amp; Imprimerie</option>
+                                                <option>Formations professionnelles</option>
+                                                <option>Matériel informatique</option>
+                                                <option>Mobilier &amp; Fournitures de bureau</option>
+                                                <option>Matériaux de construction &amp; ménagement</option>
+                                                <option>Commercial / Développement commercial</option>
+                                                <option>Administratif / Ressources humaines</option>
+                                                <option>Autre</option>
+                                            </select>
+                                        </div>
+                                        <div class="field">
+                                            <label for="candDiplome">Niveau d'études / diplôme</label>
+                                            <input type="text" id="candDiplome" placeholder="Ex. : BTS, Licence, Master…" />
+                                        </div>
+                                        <div class="field">
+                                            <label for="candExperience">Expérience professionnelle</label>
+                                            <select id="candExperience">
+                                                <option value="" selected>Non précisé</option>
+                                                <option>Aucune expérience</option>
+                                                <option>Moins de 2 ans</option>
+                                                <option>2 à 5 ans</option>
+                                                <option>Plus de 5 ans</option>
+                                            </select>
+                                        </div>
+                                        <div class="field">
+                                            <label for="candDisponibilite">Disponibilité</label>
+                                            <select id="candDisponibilite">
+                                                <option value="" selected>Non précisé</option>
+                                                <option>Immédiate</option>
+                                                <option>Sous 1 mois</option>
+                                                <option>Sous 3 mois</option>
+                                                <option>À définir</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="wizard-nav">
+                                        <button type="button" class="btn btn--outline wizard-back">Précédent</button>
+                                        <button type="button" class="btn btn--primary wizard-next">Continuer</button>
+                                    </div>
+                                </div>
+
+                                <div class="wizard-step" data-step="3">
+                                    <p class="gsn-form-step">Étape 3 / 4</p>
+                                    <h2>Votre CV et votre message</h2>
+                                    <div class="field">
+                                        <label for="candCv">Votre CV *</label>
+                                        <input type="file" id="candCv" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+                                        <p class="field-hint" id="candCvHint">Formats acceptés : PDF ou Word — 5 Mo maximum.</p>
+                                    </div>
+                                    <div class="field">
+                                        <label for="candMessage">Présentez-vous en quelques lignes *</label>
+                                        <textarea id="candMessage" rows="4" placeholder="Parcours, motivations, poste ou domaine recherché…" required></textarea>
+                                    </div>
+                                    <div class="wizard-nav">
+                                        <button type="button" class="btn btn--outline wizard-back">Précédent</button>
+                                        <button type="button" class="btn btn--primary wizard-next">Vérifier ma candidature</button>
+                                    </div>
+                                </div>
+
+                                <div class="wizard-step" data-step="4">
+                                    <p class="gsn-form-step">Étape 4 / 4</p>
+                                    <h2>Vérifiez votre candidature</h2>
+                                    <div class="wizard-recap" id="wizardRecap"><!-- rempli par js/site.js juste avant l'affichage de cette étape --></div>
+
+                                    <div class="hp-field" aria-hidden="true">
+                                        <label for="candSiteWeb">Ne pas remplir ce champ</label>
+                                        <input type="text" id="candSiteWeb" name="website" tabindex="-1" autocomplete="off" />
+                                    </div>
+
+                                    <div class="wizard-nav">
+                                        <button type="button" class="btn btn--outline wizard-back">Précédent</button>
+                                        <button type="submit" class="btn btn--whatsapp btn--orbit gsn-form-submit">
+                                            <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                                            Envoyer ma candidature sur WhatsApp
+                                        </button>
+                                    </div>
+                                    <p class="gsn-form-hint gsn-form-hint--center" id="candSendHint">En cliquant, WhatsApp s'ouvre avec un message pré-rempli récapitulant vos informations : il ne vous reste plus qu'à joindre votre CV et à l'envoyer.</p>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <span class="logo-word">MSIS<span>-CI</span></span>
+                        <p>Le Groupe MSIS-CI propose des solutions professionnelles adaptées aux besoins des entreprises, des institutions et des particuliers à travers sept pôles de solutions complémentaires.</p>
+                    </div>
+                    <div class="footer-col">
+                        <h3>Nos pôles de solutions</h3>
+                        <ul>
+                            <li><a href="ServcINFOR.html">Informatique &amp; Solutions numériques</a></li>
+                            <li><a href="ServcELECT.html">Sécurité &amp; Équipements électroniques</a></li>
+                            <li><a href="ServcIMPRI.html">Communication visuelle &amp; Imprimerie</a></li>
+                            <li><a href="ServcFPROF.html">Formations professionnelles</a></li>
+                            <li><a href="ServcMATIN.html">Matériel informatique</a></li>
+                            <li><a href="ServcFBURO.html">Mobilier &amp; Fournitures de bureau</a></li>
+                            <li><a href="ServcMATCO.html">Matériaux de construction &amp; ménagement</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h3>Entreprise</h3>
+                        <ul>
+                            <li><a href="Nous.html#apropos">Qui sommes-nous</a></li>
+                            <li><a href="Nous.html#valeurs">Nos valeurs</a></li>
+                            <li><a href="Partenaires.html">Nos partenaires</a></li>
+                            <li><a href="Partenaire-GSN.html">Devenir partenaire GSN</a></li>
+                            <li><a href="Partenaire-Commercial.html">Devenir partenaire commercial</a></li>
+                            <li><a href="Carriere.html">Carrières</a></li>
+                            <li><a href="http://localhost:8010" data-espace target="_blank" rel="noopener">Mon Espace</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h3>Contact</h3>
+                        <ul>
+                            <li>Quartier Bracodi, non loin de la direction générale des impôts</li>
+                            <li>03 BP 244 Abidjan 03</li>
+                            <li><a href="tel:+2252735907428">(+225) 27 359 074 28</a></li>
+                            <li><a href="https://wa.me/2250100063355" target="_blank" rel="noopener">WhatsApp : (+225) 01 00 06 33 55</a></li>
+                            <li><a href="mailto:groupemsisci@gmail.com">groupemsisci@gmail.com</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <span>© Groupe MSIS-CI 2022–2026. Tous droits réservés.</span>
+                    <span>www.msis-ci.com</span>
+                </div>
+            </div>
+        </footer>
+
+        <script src="js/config.js"></script>
+        <script src="js/site.js" defer></script>
+    </body>
+</html>

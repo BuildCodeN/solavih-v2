@@ -13,11 +13,27 @@
     var espaceUrl = ((window.SOLAVIH_CONFIG && window.SOLAVIH_CONFIG.espaceUrl) || '').replace(/\/+$/, '');
 
     try {
+        var liensEspace = document.querySelectorAll('[data-espace]');
         if (espaceUrl) {
-            var liensEspace = document.querySelectorAll('[data-espace]');
             for (var e = 0; e < liensEspace.length; e++) {
                 var chemin = liensEspace[e].getAttribute('data-espace') || '';
                 liensEspace[e].setAttribute('href', espaceUrl + chemin);
+            }
+        } else {
+            /* L'application n'est pas en ligne : on masque ses points d'entrée plutôt que de
+               laisser des liens morts. Un conteneur dont tous les liens sont masqués l'est aussi
+               (pas de bloc vide). Pour les réactiver : renseigner espaceUrl dans js/config.js. */
+            for (var m = 0; m < liensEspace.length; m++) {
+                liensEspace[m].style.display = 'none';
+            }
+            for (var p = 0; p < liensEspace.length; p++) {
+                var parent = liensEspace[p].parentNode;
+                if (!parent || parent === document.body) continue;
+                var tousMasques = true;
+                for (var c = 0; c < parent.children.length; c++) {
+                    if (parent.children[c].style.display !== 'none') { tousMasques = false; break; }
+                }
+                if (tousMasques) parent.style.display = 'none';
             }
         }
     } catch (err) { /* les liens gardent leur adresse d'origine */ }
@@ -346,7 +362,7 @@
 
             var construireMessage = function (numero) {
                 var lignes = [
-                    "Bonjour SOLAVIH, je souhaite m'inscrire à un contrat GSN.",
+                    "Bonjour MSIS-CI, je souhaite m'inscrire à un contrat GSN.",
                     numero ? 'Référence : ' + numero : '',
                     "",
                     "Nom : " + valeurChamp('champNom'),
@@ -374,7 +390,7 @@
             /* API de l'espace client — enregistre l'inscription et fournit son
                numéro de référence. L'adresse vient de js/config.js, comme les
                liens « Mon Espace » de l'en-tête. */
-            var API_INSCRIPTIONS_GSN = (espaceUrl || 'http://localhost:8010') + '/api/inscriptions-gsn';
+            var API_INSCRIPTIONS_GSN = espaceUrl ? espaceUrl + '/api/inscriptions-gsn' : '';
 
             var boutonEnvoi = gsnForm.querySelector('.gsn-form-submit');
 
@@ -410,7 +426,7 @@
                 var ouvrirWhatsapp = function (numero) {
                     if (boutonEnvoi) boutonEnvoi.classList.remove('is-loading');
                     var texte = encodeURIComponent(construireMessage(numero));
-                    var url = 'https://wa.me/225100063355?text=' + texte;
+                    var url = 'https://wa.me/2250100063355?text=' + texte;
                     if (fenetre) { fenetre.location.href = url; }
                     else { window.open(url, '_blank', 'noopener'); }
                 };
@@ -437,7 +453,8 @@
                 var formationsCochees = gsnForm.querySelectorAll('input[name="formations"]:checked');
                 donnees.formations = formationsCochees.length ? Array.prototype.map.call(formationsCochees, function (c) { return c.value; }) : null;
 
-                if (!window.fetch) { ouvrirWhatsapp(null); return; }
+                /* Sans application en ligne (espaceUrl vide), pas d'appel réseau : WhatsApp directement. */
+                if (!window.fetch || !API_INSCRIPTIONS_GSN) { ouvrirWhatsapp(null); return; }
 
                 var controleur = window.AbortController ? new AbortController() : null;
                 var minuteur = controleur ? window.setTimeout(function () { controleur.abort(); }, 2500) : null;
@@ -459,4 +476,505 @@
             });
         }
     } catch (e) { /* le formulaire reste consultable même si l'envoi échoue */ }
+
+    /* ---------- Formulaire de candidature spontanée (Candidature-Spontanee.html) ----------
+       Assistant en 4 étapes (coordonnées / profil / CV &amp; message / vérification) :
+       un seul bloc .wizard-step visible à la fois, barre + puces de progression tenues
+       à jour dans irVersEtape(), dernière étape = récapitulatif modifiable avant envoi.
+       Comme le formulaire GSN ci-dessus, l'envoi final ouvre WhatsApp avec un message
+       pré-rempli — sans appel à « Mon Espace » (pas d'équivalent de /api/inscriptions-gsn
+       côté candidatures à ce jour ; à ajouter facilement sur le même modèle si besoin).
+       CV : sur les appareils qui savent partager un fichier (Web Share API, surtout
+       mobile), l'envoi ouvre le menu de partage avec le CV déjà joint. Ailleurs (la
+       plupart des ordinateurs de bureau), aucune API web ne permet de joindre un fichier
+       à un simple lien WhatsApp : la personne le joint elle-même, d'où le rappel dans
+       .gsn-form-hint et dans construireMessageCandidature(). */
+    try {
+        var candidatureForm = document.getElementById('candidatureForm');
+        if (candidatureForm) {
+            var valeurChampCand = function (id) {
+                var el = document.getElementById(id);
+                return el && el.value ? el.value.trim() : '';
+            };
+            var ouVideCand = function (v) { return v ? v : '—'; };
+            var champCv = document.getElementById('candCv');
+            var indiceCv = document.getElementById('candCvHint');
+            var indiceCvParDefaut = indiceCv ? indiceCv.textContent : '';
+            var indiceEnvoi = document.getElementById('candSendHint');
+            var texteEnvoiParDefaut = indiceEnvoi ? indiceEnvoi.textContent : '';
+
+            /* fichierDejaJoint : true quand le message part via navigator.share avec le
+               CV en pièce jointe (le fichier voyage déjà avec le texte) ; false quand il
+               part par le simple lien wa.me (texte seul — la personne joindra son CV
+               elle-même dans WhatsApp juste après). */
+            var infoCvPourMessage = function (fichierDejaJoint) {
+                var f = champCv ? champCv.files[0] : null;
+                if (!f) return '—';
+                return f.name + (fichierDejaJoint ? ' (joint à cet envoi)' : ' (à joindre vous-même dans WhatsApp)');
+            };
+
+            var construireMessageCandidature = function (fichierDejaJoint) {
+                var lignes = [
+                    "Bonjour MSIS-CI, je vous envoie une candidature spontanée.",
+                    "",
+                    "Nom : " + valeurChampCand('candNom'),
+                    "Téléphone : " + valeurChampCand('candTel'),
+                    "Email : " + ouVideCand(valeurChampCand('candEmail')),
+                    "",
+                    "Domaine qui m'intéresse : " + ouVideCand(valeurChampCand('candDomaine')),
+                    "Niveau d'études / diplôme : " + ouVideCand(valeurChampCand('candDiplome')),
+                    "Expérience : " + ouVideCand(valeurChampCand('candExperience')),
+                    "Disponibilité : " + ouVideCand(valeurChampCand('candDisponibilite')),
+                    "",
+                    "CV : " + infoCvPourMessage(fichierDejaJoint),
+                    "Message : " + ouVideCand(valeurChampCand('candMessage'))
+                ];
+                return lignes.join('\n');
+            };
+
+            /* ---- Assistant pas à pas ---- */
+            var etapesEls = Array.prototype.slice.call(candidatureForm.querySelectorAll('.wizard-step'));
+            var progressEls = Array.prototype.slice.call(candidatureForm.parentNode.querySelectorAll('.wizard-progress-step'));
+            var fillEl = document.getElementById('wizardFill');
+            var recapEl = document.getElementById('wizardRecap');
+            var totalEtapes = etapesEls.length;
+            var etapeActuelle = 1;
+
+            /* Le bouton promet WhatsApp précisément — pas « une appli parmi d'autres ».
+               Sur mobile (Android/iPhone), WhatsApp s'enregistre comme destination de
+               partage et apparaît bien dans le menu natif : le raccourci tient sa
+               promesse. Sur ordinateur, Chrome/Edge exposent aussi navigator.share,
+               mais WhatsApp Desktop (hors version Store) ne s'enregistre pas comme
+               destination : le menu qui s'ouvre ne propose alors pas WhatsApp, ce qui
+               ne correspond pas au bouton — d'où ce garde-fou supplémentaire. */
+            var estMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+
+            var partageAvecFichierPossible = function (f) {
+                return !!(estMobile && f && window.navigator && navigator.share && navigator.canShare && navigator.canShare({ files: [f] }));
+            };
+
+            var majIndiceEnvoi = function () {
+                if (!indiceEnvoi) return;
+                var possible = partageAvecFichierPossible(champCv ? champCv.files[0] : null);
+                indiceEnvoi.textContent = possible
+                    ? "En cliquant, un menu de partage s'ouvre avec votre CV déjà joint : choisissez WhatsApp pour l'envoyer."
+                    : texteEnvoiParDefaut;
+            };
+
+            var remplirRecap = function () {
+                if (!recapEl) return;
+                recapEl.textContent = '';
+
+                var creerSection = function (etape, paires) {
+                    var section = document.createElement('div');
+                    section.className = 'wizard-recap-section';
+                    var dl = document.createElement('dl');
+                    for (var i = 0; i < paires.length; i++) {
+                        var dt = document.createElement('dt'); dt.textContent = paires[i][0];
+                        var dd = document.createElement('dd'); dd.textContent = paires[i][1];
+                        dl.appendChild(dt); dl.appendChild(dd);
+                    }
+                    var bouton = document.createElement('button');
+                    bouton.type = 'button';
+                    bouton.className = 'wizard-recap-edit';
+                    bouton.textContent = 'Modifier';
+                    bouton.addEventListener('click', function () { irVersEtape(etape); });
+                    section.appendChild(dl);
+                    section.appendChild(bouton);
+                    recapEl.appendChild(section);
+                };
+
+                creerSection(1, [
+                    ['Nom complet', valeurChampCand('candNom')],
+                    ['Téléphone', valeurChampCand('candTel')],
+                    ['Email', ouVideCand(valeurChampCand('candEmail'))]
+                ]);
+                creerSection(2, [
+                    ['Domaine', ouVideCand(valeurChampCand('candDomaine'))],
+                    ['Diplôme', ouVideCand(valeurChampCand('candDiplome'))],
+                    ['Expérience', ouVideCand(valeurChampCand('candExperience'))],
+                    ['Disponibilité', ouVideCand(valeurChampCand('candDisponibilite'))]
+                ]);
+                var fichierCv = champCv ? champCv.files[0] : null;
+                creerSection(3, [
+                    ['CV', fichierCv ? (fichierCv.name + ' (' + Math.ceil(fichierCv.size / 1024) + ' Ko)') : 'Non ajouté'],
+                    ['Message', valeurChampCand('candMessage')]
+                ]);
+
+                majIndiceEnvoi();
+            };
+
+            var irVersEtape = function (n) {
+                if (n < 1) n = 1;
+                if (n > totalEtapes) n = totalEtapes;
+                etapesEls.forEach(function (el) {
+                    el.classList.toggle('is-active', Number(el.getAttribute('data-step')) === n);
+                });
+                progressEls.forEach(function (el) {
+                    var s = Number(el.getAttribute('data-step'));
+                    el.classList.toggle('is-active', s === n);
+                    el.classList.toggle('is-done', s < n);
+                });
+                if (fillEl) fillEl.style.width = Math.round((n / totalEtapes) * 100) + '%';
+                etapeActuelle = n;
+                if (n === totalEtapes) remplirRecap();
+                try {
+                    var panel = candidatureForm.closest('.apply-panel');
+                    if (panel) panel.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+                } catch (errScroll) { /* le changement d'étape reste fonctionnel sans le scroll */ }
+                try {
+                    var champ = etapesEls[n - 1] && etapesEls[n - 1].querySelector('input, select, textarea');
+                    if (champ) champ.focus({ preventScroll: true });
+                } catch (errFocus) { /* le focus automatique n'est qu'un confort */ }
+            };
+
+            var etapeEstValide = function (n) {
+                var etapeEl = etapesEls[n - 1];
+                if (!etapeEl) return true;
+                var champs = etapeEl.querySelectorAll('input, select, textarea');
+                for (var i = 0; i < champs.length; i++) {
+                    if (!champs[i].checkValidity()) { champs[i].reportValidity(); return false; }
+                }
+                return true;
+            };
+
+            var boutonsSuivant = Array.prototype.slice.call(candidatureForm.querySelectorAll('.wizard-next'));
+            for (var bs = 0; bs < boutonsSuivant.length; bs++) {
+                boutonsSuivant[bs].addEventListener('click', function () {
+                    if (etapeEstValide(etapeActuelle)) irVersEtape(etapeActuelle + 1);
+                });
+            }
+            var boutonsPrecedent = Array.prototype.slice.call(candidatureForm.querySelectorAll('.wizard-back'));
+            for (var bp = 0; bp < boutonsPrecedent.length; bp++) {
+                boutonsPrecedent[bp].addEventListener('click', function () { irVersEtape(etapeActuelle - 1); });
+            }
+
+            /* Un formulaire avec un bouton de type submit réagit à la touche Entrée
+               même depuis une étape non affichée : sans ce garde-fou, Entrée dans le
+               champ « Nom » (étape 1) déclencherait l'envoi WhatsApp immédiatement. */
+            candidatureForm.addEventListener('keydown', function (evt) {
+                if (evt.key !== 'Enter' || (evt.target && evt.target.tagName === 'TEXTAREA')) return;
+                if (etapeActuelle === totalEtapes) return;
+                evt.preventDefault();
+                if (etapeEstValide(etapeActuelle)) irVersEtape(etapeActuelle + 1);
+            });
+
+            if (champCv && indiceCv) {
+                champCv.addEventListener('change', function () {
+                    var f = champCv.files[0];
+                    indiceCv.textContent = f ? ('Fichier sélectionné : ' + f.name + ' (' + Math.ceil(f.size / 1024) + ' Ko)') : indiceCvParDefaut;
+                    majIndiceEnvoi();
+                });
+            }
+
+            var boutonEnvoiCand = candidatureForm.querySelector('.gsn-form-submit');
+
+            candidatureForm.addEventListener('submit', function (evt) {
+                evt.preventDefault();
+
+                if (!etapeEstValide(totalEtapes)) return;
+
+                /* Champ piège anti-robot : si rempli, on abandonne silencieusement
+                   (un humain ne le voit ni ne le remplit jamais). */
+                if (valeurChampCand('candSiteWeb')) return;
+
+                if (boutonEnvoiCand) boutonEnvoiCand.classList.add('is-loading');
+
+                var fichierCv = champCv ? champCv.files[0] : null;
+                var partageFichier = partageAvecFichierPossible(fichierCv);
+
+                var ouvrirWhatsappTexte = function () {
+                    if (boutonEnvoiCand) boutonEnvoiCand.classList.remove('is-loading');
+                    window.open('https://wa.me/2250100063355?text=' + encodeURIComponent(construireMessageCandidature(false)), '_blank', 'noopener');
+                };
+
+                if (partageFichier) {
+                    navigator.share({ files: [fichierCv], text: construireMessageCandidature(true), title: 'Candidature spontanée — MSIS-CI' })
+                        .then(function () { if (boutonEnvoiCand) boutonEnvoiCand.classList.remove('is-loading'); })
+                        .catch(function () { ouvrirWhatsappTexte(); });
+                } else {
+                    ouvrirWhatsappTexte();
+                }
+            });
+
+            /* Pas d'appel à irVersEtape(1) ici : l'étape 1 est déjà active dans le HTML
+               (classes is-active posées d'origine) et cet appel ferait défiler la page
+               vers le formulaire dès le chargement, avant toute action de l'internaute. */
+        }
+    } catch (e) { /* le formulaire reste consultable même si l'assistant échoue */ }
+
+    /* ---------- Formulaire « Devenir partenaire GSN » (Partenaire-GSN.html) ----------
+       Même assistant par étapes que la candidature spontanée ci-dessus (variables
+       suffixées Gp pour ne jamais entrer en collision avec celles des deux autres
+       formulaires de ce fichier), plus deux mécaniques propres à ce formulaire :
+       - les compteurs [ − ] n [ + ] de l'étape « Inventaire » (délégation de clic sur
+         .stepper-btn) ;
+       - les cases à cocher de l'étape « Autres équipements », qui ne font que
+         synchroniser leur compteur associé (0 <-> 1) — le compteur reste la seule
+         source de vérité pour le récapitulatif et le message WhatsApp. */
+    try {
+        var partenaireGsnForm = document.getElementById('partenaireGsnForm');
+        if (partenaireGsnForm) {
+            var valeurChampGp = function (id) {
+                var el = document.getElementById(id);
+                return el && el.value ? el.value.trim() : '';
+            };
+            var ouVideGp = function (v) { return v ? v : '—'; };
+            var localisationSlashGp = function () {
+                var parties = [valeurChampGp('gpVille'), valeurChampGp('gpCommune'), valeurChampGp('gpQuartier'), valeurChampGp('gpSousQuartier')];
+                var nonVides = [];
+                for (var i = 0; i < parties.length; i++) { if (parties[i]) nonVides.push(parties[i]); }
+                return nonVides.length ? nonVides.join(' / ') : '—';
+            };
+
+            var champsInventaireGp = [
+                ['gpOrdiBureau', 'Ordinateurs de bureau'],
+                ['gpOrdiPortable', 'Ordinateurs portables'],
+                ['gpImprimantes', 'Imprimante laser'],
+                ['gpMultifonctions', "Imprimante à jet d'encre"],
+                ['gpRouteurs', 'Routeurs'],
+                ['gpSwitches', 'Switches'],
+                ['gpWifi', "Points d'accès Wi-Fi"],
+                ['gpBaies', 'Baies / coffrets réseau'],
+                ['gpServeursPhysiques', 'Serveurs physiques'],
+                ['gpServeursNas', 'Serveurs NAS / stockage réseau']
+            ];
+            var champsAutresGp = [
+                ['gpUps', 'Onduleurs / UPS'],
+                ['gpTelIp', 'Téléphones IP'],
+                ['gpCaisse', 'Terminaux de caisse'],
+                ['gpVideo', 'Vidéoprojecteurs']
+            ];
+            var casesEquipementGp = [
+                ['gpUpsCoche', 'gpUps'],
+                ['gpTelIpCoche', 'gpTelIp'],
+                ['gpCaisseCoche', 'gpCaisse'],
+                ['gpVideoCoche', 'gpVideo']
+            ];
+
+            var listeNonZeroGp = function (champs) {
+                var lignes = [];
+                for (var i = 0; i < champs.length; i++) {
+                    var el = document.getElementById(champs[i][0]);
+                    var val = el ? (parseInt(el.value, 10) || 0) : 0;
+                    if (val > 0) lignes.push([champs[i][1], val]);
+                }
+                return lignes;
+            };
+            var inventaireInformatiqueGp = function () { return listeNonZeroGp(champsInventaireGp); };
+            var autresEquipementsGp = function () {
+                var lignes = listeNonZeroGp(champsAutresGp);
+                var precision = valeurChampGp('gpAutrePrecision');
+                var qte = parseInt((document.getElementById('gpAutreQte') || {}).value, 10) || 0;
+                if (precision && qte > 0) lignes.push([precision, qte]);
+                return lignes;
+            };
+
+            var construireMessageGp = function () {
+                var contratCoche = partenaireGsnForm.querySelector('input[name="gpContrat"]:checked');
+                var etatCoche = partenaireGsnForm.querySelector('input[name="gpEtat"]:checked');
+                var zoneCoche = partenaireGsnForm.querySelector('input[name="gpZone"]:checked');
+                var inv = inventaireInformatiqueGp().concat(autresEquipementsGp());
+
+                var lignes = ["DEMANDE DE PARTENARIAT GSN", ""];
+                lignes.push("Entreprise : " + valeurChampGp('gpEntreprise'));
+                lignes.push("Secteur : " + valeurChampGp('gpSecteur'));
+                lignes.push("Zone : " + (zoneCoche ? zoneCoche.value : 'Non précisé'));
+                lignes.push("Adresse : " + valeurChampGp('gpAdresse'));
+                lignes.push("Localisation : " + localisationSlashGp());
+                var siteWeb = valeurChampGp('gpSiteWeb');
+                if (siteWeb) lignes.push("Site web : " + siteWeb);
+                var rccm = valeurChampGp('gpRccm');
+                if (rccm) lignes.push("RCCM : " + rccm);
+                lignes.push("");
+                lignes.push("Contact : " + valeurChampGp('gpContactNom'));
+                lignes.push("Fonction : " + valeurChampGp('gpFonction'));
+                lignes.push("Téléphone : " + valeurChampGp('gpTel'));
+                lignes.push("E-mail : " + valeurChampGp('gpEmail'));
+                lignes.push("");
+                lignes.push("Contrat GSN souhaité : " + (contratCoche ? contratCoche.value : 'Non précisé'));
+                lignes.push("");
+                lignes.push("INVENTAIRE DU PARC");
+                if (inv.length) {
+                    for (var i = 0; i < inv.length; i++) lignes.push(inv[i][0] + " : " + inv[i][1]);
+                } else {
+                    lignes.push("Aucun équipement renseigné");
+                }
+                lignes.push("");
+                lignes.push("État général du parc : " + (etatCoche ? etatCoche.value : 'Non précisé'));
+                lignes.push("");
+                lignes.push("Je souhaite être contacté par le Groupe MSIS-CI afin d'échanger sur cette demande et recevoir une proposition adaptée.");
+                return lignes.join('\n');
+            };
+
+            /* ---- Assistant pas à pas (mêmes principes que candidatureForm ci-dessus) ---- */
+            var etapesElsGp = Array.prototype.slice.call(partenaireGsnForm.querySelectorAll('.wizard-step'));
+            var progressElsGp = Array.prototype.slice.call(partenaireGsnForm.parentNode.querySelectorAll('.wizard-progress-step'));
+            var fillElGp = document.getElementById('gpWizardFill');
+            var recapElGp = document.getElementById('gpWizardRecap');
+            var totalEtapesGp = etapesElsGp.length;
+            var etapeActuelleGp = 1;
+
+            var remplirRecapGp = function () {
+                if (!recapElGp) return;
+                recapElGp.textContent = '';
+
+                var creerSection = function (etape, paires) {
+                    var section = document.createElement('div');
+                    section.className = 'wizard-recap-section';
+                    var dl = document.createElement('dl');
+                    for (var i = 0; i < paires.length; i++) {
+                        var dt = document.createElement('dt'); dt.textContent = paires[i][0];
+                        var dd = document.createElement('dd'); dd.textContent = paires[i][1];
+                        dl.appendChild(dt); dl.appendChild(dd);
+                    }
+                    var bouton = document.createElement('button');
+                    bouton.type = 'button';
+                    bouton.className = 'wizard-recap-edit';
+                    bouton.textContent = 'Modifier';
+                    bouton.addEventListener('click', function () { irVersEtapeGp(etape); });
+                    section.appendChild(dl);
+                    section.appendChild(bouton);
+                    recapElGp.appendChild(section);
+                };
+
+                var zoneCoche = partenaireGsnForm.querySelector('input[name="gpZone"]:checked');
+                creerSection(1, [
+                    ['Entreprise', valeurChampGp('gpEntreprise')],
+                    ['Secteur', valeurChampGp('gpSecteur')],
+                    ['Zone', zoneCoche ? zoneCoche.value : 'Non précisé'],
+                    ['Adresse', valeurChampGp('gpAdresse')],
+                    ['Localisation', localisationSlashGp()],
+                    ['Site web', ouVideGp(valeurChampGp('gpSiteWeb'))],
+                    ['RCCM', ouVideGp(valeurChampGp('gpRccm'))],
+                    ['Contact', valeurChampGp('gpContactNom') + ' — ' + valeurChampGp('gpFonction')],
+                    ['Téléphone', valeurChampGp('gpTel')],
+                    ['Email', valeurChampGp('gpEmail')]
+                ]);
+
+                var contratCoche = partenaireGsnForm.querySelector('input[name="gpContrat"]:checked');
+                creerSection(2, [['Contrat souhaité', contratCoche ? contratCoche.value : 'Non précisé']]);
+
+                var inv = inventaireInformatiqueGp();
+                creerSection(3, inv.length
+                    ? inv.map(function (l) { return [l[0], String(l[1])]; })
+                    : [['Inventaire informatique', 'Aucun équipement renseigné']]);
+
+                var autres = autresEquipementsGp().map(function (l) { return [l[0], String(l[1])]; });
+                var etatCoche = partenaireGsnForm.querySelector('input[name="gpEtat"]:checked');
+                autres.push(['État du parc', etatCoche ? etatCoche.value : 'Non précisé']);
+                creerSection(4, autres);
+            };
+
+            var irVersEtapeGp = function (n) {
+                if (n < 1) n = 1;
+                if (n > totalEtapesGp) n = totalEtapesGp;
+                etapesElsGp.forEach(function (el) {
+                    el.classList.toggle('is-active', Number(el.getAttribute('data-step')) === n);
+                });
+                progressElsGp.forEach(function (el) {
+                    var s = Number(el.getAttribute('data-step'));
+                    el.classList.toggle('is-active', s === n);
+                    el.classList.toggle('is-done', s < n);
+                });
+                if (fillElGp) fillElGp.style.width = Math.round((n / totalEtapesGp) * 100) + '%';
+                etapeActuelleGp = n;
+                if (n === totalEtapesGp) remplirRecapGp();
+                try {
+                    var panel = partenaireGsnForm.closest('.apply-panel');
+                    if (panel) panel.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+                } catch (errScroll) { /* le changement d'étape reste fonctionnel sans le scroll */ }
+                try {
+                    var champ = etapesElsGp[n - 1] && etapesElsGp[n - 1].querySelector('input, select, textarea');
+                    if (champ) champ.focus({ preventScroll: true });
+                } catch (errFocus) { /* le focus automatique n'est qu'un confort */ }
+            };
+
+            var etapeEstValideGp = function (n) {
+                var etapeEl = etapesElsGp[n - 1];
+                if (!etapeEl) return true;
+                var champs = etapeEl.querySelectorAll('input, select, textarea');
+                for (var i = 0; i < champs.length; i++) {
+                    if (!champs[i].checkValidity()) { champs[i].reportValidity(); return false; }
+                }
+                return true;
+            };
+
+            var boutonsSuivantGp = Array.prototype.slice.call(partenaireGsnForm.querySelectorAll('.wizard-next'));
+            for (var bsg = 0; bsg < boutonsSuivantGp.length; bsg++) {
+                boutonsSuivantGp[bsg].addEventListener('click', function () {
+                    if (etapeEstValideGp(etapeActuelleGp)) irVersEtapeGp(etapeActuelleGp + 1);
+                });
+            }
+            var boutonsPrecedentGp = Array.prototype.slice.call(partenaireGsnForm.querySelectorAll('.wizard-back'));
+            for (var bpg = 0; bpg < boutonsPrecedentGp.length; bpg++) {
+                boutonsPrecedentGp[bpg].addEventListener('click', function () { irVersEtapeGp(etapeActuelleGp - 1); });
+            }
+
+            partenaireGsnForm.addEventListener('keydown', function (evt) {
+                if (evt.key !== 'Enter' || (evt.target && evt.target.tagName === 'TEXTAREA')) return;
+                if (etapeActuelleGp === totalEtapesGp) return;
+                evt.preventDefault();
+                if (etapeEstValideGp(etapeActuelleGp)) irVersEtapeGp(etapeActuelleGp + 1);
+            });
+
+            /* ---- Compteurs [ − ] n [ + ] ---- */
+            var boutonsStepperGp = Array.prototype.slice.call(partenaireGsnForm.querySelectorAll('.stepper-btn'));
+            for (var sg = 0; sg < boutonsStepperGp.length; sg++) {
+                boutonsStepperGp[sg].addEventListener('click', function () {
+                    var cible = document.getElementById(this.getAttribute('data-target'));
+                    if (!cible) return;
+                    var delta = parseInt(this.getAttribute('data-step'), 10) || 0;
+                    var actuel = parseInt(cible.value, 10) || 0;
+                    var min = parseInt(cible.min, 10) || 0;
+                    var max = parseInt(cible.max, 10) || 999;
+                    var nouveau = actuel + delta;
+                    if (nouveau < min) nouveau = min;
+                    if (nouveau > max) nouveau = max;
+                    cible.value = nouveau;
+                    for (var sc = 0; sc < casesEquipementGp.length; sc++) {
+                        if (casesEquipementGp[sc][1] === cible.id) {
+                            var caseAssociee = document.getElementById(casesEquipementGp[sc][0]);
+                            if (caseAssociee) caseAssociee.checked = nouveau > 0;
+                        }
+                    }
+                });
+            }
+
+            /* ---- Cases à cocher « Autres équipements » : ne font que synchroniser leur
+               compteur (0 <-> 1) — le compteur reste la seule source de vérité. ---- */
+            for (var ceg = 0; ceg < casesEquipementGp.length; ceg++) {
+                (function (idCase, idCompteur) {
+                    var caseEl = document.getElementById(idCase);
+                    var compteurEl = document.getElementById(idCompteur);
+                    if (!caseEl || !compteurEl) return;
+                    caseEl.addEventListener('change', function () {
+                        if (caseEl.checked) {
+                            if ((parseInt(compteurEl.value, 10) || 0) === 0) compteurEl.value = 1;
+                        } else {
+                            compteurEl.value = 0;
+                        }
+                    });
+                })(casesEquipementGp[ceg][0], casesEquipementGp[ceg][1]);
+            }
+
+            var boutonEnvoiGp = partenaireGsnForm.querySelector('.gsn-form-submit');
+
+            partenaireGsnForm.addEventListener('submit', function (evt) {
+                evt.preventDefault();
+
+                if (!etapeEstValideGp(totalEtapesGp)) return;
+
+                /* Champ piège anti-robot : si rempli, on abandonne silencieusement. */
+                if (valeurChampGp('gpHoneypot')) return;
+
+                if (boutonEnvoiGp) boutonEnvoiGp.classList.add('is-loading');
+                window.open('https://wa.me/2250100063355?text=' + encodeURIComponent(construireMessageGp()), '_blank', 'noopener');
+                if (boutonEnvoiGp) boutonEnvoiGp.classList.remove('is-loading');
+            });
+
+            /* Pas d'appel à irVersEtapeGp(1) ici, pour la même raison que le formulaire
+               de candidature ci-dessus (l'étape 1 est déjà active dans le HTML). */
+        }
+    } catch (e) { /* le formulaire reste consultable même si l'assistant échoue */ }
 })();

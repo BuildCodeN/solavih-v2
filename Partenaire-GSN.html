@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="Devenez partenaire GSN du Groupe MSIS-CI : présentez votre entreprise et votre parc informatique, choisissez votre formule GSN Anticip ou GSN Tranquillité, et recevez une proposition adaptée." />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Bodoni+Moda:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="style.css" />
+        <link rel="icon" type="image/png" sizes="192x192" href="images/LOGO/MSIS-CI/msis_icon.png" />
+        <link rel="apple-touch-icon" href="images/LOGO/MSIS-CI/msis_apple-touch-icon.png" />
+        <style>
+            /* Page « Devenir partenaire GSN » : même gabarit que Candidature-Spontanee.html
+               (colonne de réassurance + panneau de formulaire surélevé, assistant par
+               étapes réutilisant .wizard-* de style.css). Voir js/site.js, bloc
+               « Formulaire partenaire GSN ». */
+            .apply-layout { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: var(--space-8); align-items: start; }
+            .apply-intro { position: sticky; top: calc(var(--header-height) + var(--space-6)); }
+            .apply-intro .prp-steps { margin-top: var(--space-5); }
+            .apply-note { margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--color-border); font-size: 0.88rem; color: var(--color-text-muted); }
+            .apply-panel { background: var(--color-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: var(--space-7); }
+            @media (max-width: 1080px) {
+                .apply-layout { grid-template-columns: 1fr; }
+                .apply-intro { position: static; }
+            }
+            @media (max-width: 600px) {
+                .apply-panel { padding: var(--space-5); }
+                .wizard-nav { flex-direction: column; align-items: stretch; gap: var(--space-3); }
+                .wizard-nav .wizard-back { width: 100%; }
+                .wizard-nav .wizard-next, .wizard-nav .gsn-form-submit { margin-left: 0; width: 100%; }
+            }
+
+            /* Bloc "Localisation" (Abidjan / Intérieur) : à côté d'Adresse, dans la même
+               grille 2 colonnes que le reste de l'étape — un conteneur neutre plutôt que
+               .field, dont la règle ".field input { width: 100%; ... }" (pensée pour les
+               champs texte) s'appliquait aussi aux radios plus bas dans le bloc et les
+               déformait en ellipse. Libellé au-dessus des puces, comme tous les autres
+               champs de ce formulaire. */
+            .localisation-field { margin-bottom: var(--space-4); }
+            .localisation-field-label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--color-text); margin-bottom: 6px; }
+
+            /* Chaque option dans sa propre puce bordée (même rayon que les champs texte
+               du formulaire, pour rester cohérent avec eux). Puces volontairement
+               compactes : ce bloc partage sa ligne avec Adresse, donc seulement la
+               moitié de la largeur du formulaire pour loger les deux options. */
+            .localisation-options { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
+            .localisation-option { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1.5px solid var(--color-border); border-radius: var(--radius-sm); cursor: pointer; transition: border-color var(--dur-fast) var(--ease); }
+            .localisation-option:hover { border-color: var(--color-accent-light); }
+            .localisation-option:has(input:checked) { border-color: var(--color-accent); }
+            .localisation-option-name { font-family: var(--font-display); font-weight: 600; font-size: 0.9rem; color: var(--color-primary); }
+            .localisation-option input[type="radio"]
+            {
+                appearance: none;
+                -webkit-appearance: none;
+                position: relative;
+                width: 18px; height: 18px; aspect-ratio: 1 / 1;
+                margin: 0;
+                border: 2px solid var(--color-border);
+                border-radius: 50%;
+                background: var(--color-surface);
+                cursor: pointer;
+                transition: border-color var(--dur-fast) var(--ease);
+            }
+            .localisation-option input[type="radio"]::before
+            {
+                content: '';
+                position: absolute;
+                inset: 3px;
+                border-radius: 50%;
+                background: var(--color-accent);
+                transform: scale(0);
+                transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            .localisation-option input[type="radio"]:checked { border-color: var(--color-accent); }
+            .localisation-option input[type="radio"]:checked::before { transform: scale(1); }
+
+            .wizard-progress-bar { height: 6px; border-radius: 3px; background: var(--color-border); overflow: hidden; margin-bottom: var(--space-5); }
+            .wizard-progress-fill { display: block; height: 100%; width: 20%; background: var(--color-accent); border-radius: 3px; transition: width var(--dur-medium) var(--ease); }
+            .wizard-progress-steps { display: flex; justify-content: space-between; list-style: none; margin: 0 0 var(--space-6); padding: 0; }
+            .wizard-progress-step { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; text-align: center; }
+            .wizard-progress-dot {
+                width: 30px; height: 30px; border-radius: 50%;
+                display: flex; align-items: center; justify-content: center;
+                background: var(--color-surface-muted); border: 2px solid var(--color-border);
+                color: var(--color-text-muted); font-family: var(--font-display); font-size: 0.9rem; font-weight: 600;
+                transition: background-color var(--dur-medium) var(--ease), border-color var(--dur-medium) var(--ease), color var(--dur-medium) var(--ease);
+            }
+            .wizard-progress-name { font-size: 0.75rem; color: var(--color-text-muted); transition: color var(--dur-medium) var(--ease); }
+            .wizard-progress-step.is-active .wizard-progress-dot { background: var(--color-accent); border-color: var(--color-accent); color: #FFFFFF; }
+            .wizard-progress-step.is-active .wizard-progress-name { color: var(--color-primary); font-weight: 600; }
+            .wizard-progress-step.is-done .wizard-progress-dot { background: var(--color-accent-50); border-color: var(--color-accent); color: transparent; font-size: 0; }
+            .wizard-progress-step.is-done .wizard-progress-dot::before { content: "✓"; font-size: 0.95rem; color: var(--color-accent); }
+            @media (max-width: 480px) { .wizard-progress-name { display: none; } }
+
+            .wizard-step { display: none; }
+            .wizard-step.is-active { display: block; animation: wizardStepIn var(--dur-medium) var(--ease); }
+            @keyframes wizardStepIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+            @media (prefers-reduced-motion: reduce) { .wizard-step.is-active { animation: none; } }
+
+            .wizard-nav { display: flex; align-items: center; margin-top: var(--space-6); }
+            .wizard-nav .wizard-next, .wizard-nav .gsn-form-submit { margin-left: auto; }
+            /* .gsn-form-submit porte son propre margin-top (style.css), pensé pour le
+               formulaire GSN classique où il est seul en bas de page. Ici il est à
+               côté de Précédent dans .wizard-nav (qui a déjà son propre espacement
+               au-dessus) : sans l'annuler, le bouton se retrouve décalé plus bas que
+               Précédent au lieu d'être aligné avec lui. */
+            .wizard-nav .gsn-form-submit { margin-top: 0; }
+            /* Uniquement au-dessus de 600px (donc jamais en conflit avec le bloc
+               "@media (max-width: 600px)" plus haut, qui empile les boutons en pleine
+               largeur) : le bouton final n'a pas besoin de prendre toute la largeur du
+               panneau à côté de Précédent, on lui rend une taille de bouton normale,
+               plus discrète, avec la même police que Précédent/Continuer pour que les
+               deux restent à la même hauteur. */
+            @media (min-width: 601px) {
+                .wizard-nav .btn { font-size: 0.85rem; }
+                .wizard-nav .gsn-form-submit { width: auto; padding: 13px 22px; }
+            }
+            /* Même séparateur qu'au-dessus des boutons (bordure des .wizard-recap-section)
+               repris sous les boutons, avant le texte d'aide : encadre la barre d'actions
+               au lieu de la laisser flotter entre le récapitulatif et le texte. */
+            .wizard-nav + .gsn-form-hint { margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+
+            /* Repère "ÉTAPE X / 5" : même rôle que .eyebrow (petit repère avant un grand
+               titre), mais un trait long plutôt qu'un tiret court, placé au-dessus plutôt
+               qu'à côté — pour séparer nettement chaque étape de la barre de progression
+               au-dessus. Gris (comme les séparateurs déjà utilisés dans ce formulaire),
+               pas orange : sur un trait aussi long et répété à chaque étape, l'orange
+               deviendrait vite criard ; l'orange reste réservé aux courts repères. */
+            .gsn-form-step::before { content: ""; display: block; width: 100%; height: 1px; background: var(--color-border); margin-bottom: var(--space-4); }
+
+            .wizard-recap-section { padding: var(--space-4) 0; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; gap: var(--space-4); }
+            .wizard-recap-section:first-child { padding-top: 0; }
+            .wizard-recap-section dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 5px var(--space-3); font-size: 0.92rem; }
+            .wizard-recap-section dt { color: var(--color-text-muted); }
+            .wizard-recap-section dd { margin: 0; color: var(--color-text); font-weight: 500; }
+            .wizard-recap-edit { flex-shrink: 0; background: none; border: none; color: var(--color-accent); font-size: 0.85rem; font-weight: 600; cursor: pointer; padding: 0; align-self: flex-start; }
+            .wizard-recap-edit:hover { text-decoration: underline; }
+
+            /* Groupes de compteurs (étape « Inventaire ») : un sous-titre discret au-dessus
+               de chaque famille d'équipements (Ordinateurs / Imprimantes / Réseau /
+               Serveurs), pour scinder visuellement une longue étape sans la découper en
+               encore plus d'étapes. */
+            .inventory-group { margin-bottom: var(--space-5); }
+            .inventory-group-title { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: var(--space-3); }
+
+            /* Compteur [ − ] 0 [ + ] : pas de composant équivalent ailleurs sur le site,
+               construit sur le même vocabulaire que .field (bordure, rayon, police). */
+            .field-stepper { max-width: 220px; }
+            .stepper { display: flex; align-items: stretch; border: 1px solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; background: var(--color-surface); }
+            .stepper-btn { flex-shrink: 0; width: 40px; border: none; background: var(--color-surface-muted); color: var(--color-primary); font-size: 1.15rem; font-weight: 600; line-height: 1; cursor: pointer; transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
+            .stepper-btn:hover { background: var(--color-accent-50); color: var(--color-accent-dark); }
+            .stepper-input { flex: 1; min-width: 0; border: none; border-left: 1px solid var(--color-border); border-right: 1px solid var(--color-border); text-align: center; font-family: var(--font-body); font-size: 0.95rem; padding: 10px 4px; background: transparent; -moz-appearance: textfield; }
+            .stepper-input::-webkit-outer-spin-button, .stepper-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+            .stepper-input:focus { outline: none; background: var(--color-accent-50); }
+
+            /* Sur une même ligne de .field-grid, certains libellés tiennent sur une
+               ligne (« Quantité ») et d'autres sur deux (« Autres équipements... »,
+               « Points d'accès Wi-Fi », etc.). La grille étire déjà chaque .field à
+               la hauteur de la ligne ; on pousse juste le champ/compteur en bas de
+               cette hauteur pour que tous s'alignent, sans ajouter d'espace sur les
+               lignes où les libellés font déjà la même taille. */
+            .field-grid .field { display: flex; flex-direction: column; }
+            .field-grid .field > input,
+            .field-grid .field > select,
+            .field-grid .field > .stepper { margin-top: auto; }
+
+            /* Case à cocher + compteur sur une ligne (étape « Autres équipements ») :
+               réutilise .service-pick-item pour la case, ajoute juste le compteur à droite. */
+            .equipment-row { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
+            .equipment-row .service-pick-item { flex: 1; margin-bottom: 0; }
+            .equipment-row .field-stepper { max-width: 128px; margin: 0; }
+        </style>
+        <script>document.documentElement.classList.add('js-enabled');</script>
+        <title>Devenir partenaire GSN — GROUPE MSIS-CI</title>
+    </head>
+    <body>
+        <header id="entete">
+            <div class="header-inner">
+                <a id="logo" href="index.html">
+                    <img src="images/LOGO/MSIS-CI/msis_logo.png" alt="Logo Groupe MSIS-CI" width="480" height="155" />
+                </a>
+                <button class="nav-toggle" id="navToggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="mainNav">
+                    <span></span><span></span><span></span>
+                </button>
+                <nav class="site-nav" id="mainNav">
+                    <ul class="menu">
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="Nous.html">A Propos</a></li>
+                        <li class="has-sub-menu">
+                            <a href="index.html#services">Services</a>
+                            <div class="sub-menu">
+                                <div class="sub-menu-panel">
+                                    <ul class="sub-menu-list">
+                                        <li>
+                                            <a href="ServcINFOR.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Infor/PREST2.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Informatique &amp; Solutions numériques</strong><small>Réseaux, maintenance &amp; conseil</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcELECT.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Elect/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Sécurité &amp; Équipements électroniques</strong><small>Vidéosurveillance &amp; câblage</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcIMPRI.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Impri/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Communication visuelle &amp; Tous travaux d'imprimerie</strong><small>Cartes, flyers &amp; supports</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcFPROF.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/Fpro/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Formations professionnelles</strong><small>Formations certifiantes FDFP</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcMATIN.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/VMATinfo/PREST1.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Matériel informatique</strong><small>Vente &amp; équipement</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcFBURO.html">
+                                                <span class="sub-menu-icon"><img src="images/SERVC/VMATinfo/PREST4.png" alt="" /></span>
+                                                <span class="sub-menu-text"><strong>Mobilier &amp; Fournitures de bureau</strong><small>Mobilier &amp; papeterie</small></span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="ServcMATCO.html">
+                                                <span class="sub-menu-icon"><svg viewBox="0 0 40 40" width="100%" height="100%" aria-hidden="true"><rect width="40" height="40" fill="#EF7618"/><g fill="#FFFFFF" fill-opacity="0.92"><rect x="2" y="6" width="15" height="7" rx="1"/><rect x="21" y="6" width="17" height="7" rx="1"/><rect x="-4" y="16.5" width="15" height="7" rx="1"/><rect x="13" y="16.5" width="15" height="7" rx="1"/><rect x="30" y="16.5" width="14" height="7" rx="1"/><rect x="2" y="27" width="15" height="7" rx="1"/><rect x="21" y="27" width="17" height="7" rx="1"/></g></svg></span>
+                                                <span class="sub-menu-text"><strong>Matériaux de construction &amp; ménagement</strong><small>Sable, gravier &amp; rénovation</small></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <a href="index.html#services" class="sub-menu-footer">
+                                        Voir tous nos services
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        <li><a href="Partenaires.html">Partenaires</a></li>
+                        <li><a href="Carriere.html">Carrières</a></li>
+                        <li class="cta-item"><a href="http://localhost:8010" data-espace target="_blank" rel="noopener">Mon Espace</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+        <div class="nav-backdrop" id="navBackdrop"></div>
+
+        <main>
+            <section class="page-hero hero-partenaires">
+                <div class="container">
+                    <p class="breadcrumb"><a href="index.html">Accueil</a> / <a href="Partenaires.html">Partenaires</a> / Devenir partenaire GSN</p>
+                    <p class="eyebrow">Devenir partenaire GSN</p>
+                    <h1>Confiez-nous votre environnement </br>informatique</h1>
+                    <p>Présentez votre entreprise et votre parc informatique : </br>Nous préparons une proposition adaptée à votre formule GSN,</br> sans engagement à ce stade.</p>
+                </div>
+            </section>
+
+            <section class="section section--muted">
+                <div class="container">
+                    <div class="apply-layout">
+                        <div class="apply-intro" data-reveal="left">
+                            <p class="eyebrow">Comment ça marche</p>
+                            <h2>Une demande, cinq étapes</h2>
+                            <ol class="prp-steps" style="grid-template-columns: 1fr;">
+                                <li data-reveal="scale"><strong>Vos informations</strong><span>Votre entreprise, votre contact, la formule GSN qui vous intéresse.</span></li>
+                                <li data-reveal="scale"><strong>Votre parc informatique</strong><span>Un état des lieux global de vos équipements — pas besoin du détail technique à ce stade.</span></li>
+                                <li data-reveal="scale"><strong>Envoi sur WhatsApp</strong><span>En un clic, avec le résumé complet de votre demande.</span></li>
+                                <li data-reveal="scale"><strong>Nous vous recontactons</strong><span>Notre équipe étudie votre parc et revient vers vous avec une proposition et un devis.</span></li>
+                            </ol>
+                            <p class="apply-note">Vos informations restent confidentielles et ne servent qu'à préparer votre proposition GSN. Vous pouvez aussi nous écrire directement à <a href="mailto:groupemsisci@gmail.com">groupemsisci@gmail.com</a>.</p>
+                        </div>
+
+                        <div class="apply-panel" data-reveal="right">
+                            <div class="wizard-progress">
+                                <div class="wizard-progress-bar"><span class="wizard-progress-fill" id="gpWizardFill"></span></div>
+                                <ol class="wizard-progress-steps" id="gpWizardProgressSteps">
+                                    <li class="wizard-progress-step is-active" data-step="1"><span class="wizard-progress-dot">1</span><span class="wizard-progress-name">Entreprise</span></li>
+                                    <li class="wizard-progress-step" data-step="2"><span class="wizard-progress-dot">2</span><span class="wizard-progress-name">Contrat</span></li>
+                                    <li class="wizard-progress-step" data-step="3"><span class="wizard-progress-dot">3</span><span class="wizard-progress-name">Informatique</span></li>
+                                    <li class="wizard-progress-step" data-step="4"><span class="wizard-progress-dot">4</span><span class="wizard-progress-name">Autres équip.</span></li>
+                                    <li class="wizard-progress-step" data-step="5"><span class="wizard-progress-dot">5</span><span class="wizard-progress-name">Vérification</span></li>
+                                </ol>
+                            </div>
+
+                            <form id="partenaireGsnForm" class="gsn-form" novalidate>
+
+                                <!-- Étape 1 : entreprise + personne à contacter -->
+                                <div class="wizard-step is-active" data-step="1">
+                                    <p class="gsn-form-step">Étape 1 / 5</p>
+                                    <h2>Votre entreprise</h2>
+                                    <div class="field-grid">
+                                        <div class="field">
+                                            <label for="gpEntreprise">Nom de l'entreprise / structure *</label>
+                                            <input type="text" id="gpEntreprise" autocomplete="organization" required />
+                                        </div>
+                                        <div class="field">
+                                            <label for="gpSecteur">Secteur d'activité *</label>
+                                            <input type="text" id="gpSecteur" required />
+                                        </div>
+                                        <div class="field">
+                                            <label for="gpAdresse">Adresse *</label>
+                                            <input type="text" id="gpAdresse" autocomplete="street-address" required />
+                                        </div>
+
+                                        <div class="localisation-field">
+                                            <span class="localisation-field-label">Localisation *</span>
+                                            <div class="localisation-options">
+                                                <label class="localisation-option">
+                                                    <span class="localisation-option-name">Abidjan</span>
+                                                    <input type="radio" name="gpZone" value="Abidjan" required />
+                                                </label>
+                                                <label class="localisation-option">
+                                                    <span class="localisation-option-name">Intérieur</span>
+                                                    <input type="radio" name="gpZone" value="Intérieur" />
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="field">
+                                            <label for="gpVille">Ville *</label>
+                                            <input type="text" id="gpVille" autocomplete="address-level2" required />
+                                        </div>
+                                        <div class="field">
+                                            <label for="gpCommune">Commune *</label>
+                                            <input type="text" id="gpCommune" required />
+                                        </div>
+                                        <div class="field">
+                                            <label for="gpQuartier">Quartier</label>
+                                            <input type="text" id="gpQuartier" />
+                                        </div>
+                                        <div class="field">
+                                            <label for="gpSousQuartier">Sous-quartier</label>
+                                            <input type="text" id="gpSousQuartier" />
+                                        </div>
+
+                                        <div class="field">
+                                            <label for="gpSiteWeb">Site web</label>
+                                            <input type="text" id="gpSiteWeb" placeholder="www.monentreprise.ci" />
+                                        </div>
+                                        <div class="field">
+                                            <label for="gpRccm">RCCM / Identifiant de l'entreprise</label>
+                                            <input type="text" id="gpRccm" />
+                                        </div>
+                                    </div>
+
+                                    <h2 style="margin-top: var(--space-5);">Personne à contacter</h2>
+                                    <div class="field-grid">
+                                        <div class="field">
+                                            <label for="gpContactNom">Nom et prénom *</label>
+                                            <input type="text" id="gpContactNom" autocomplete="name" required />
+                                        </div>
+                                        <div class="field">
+                                            <label for="gpFonction">Fonction *</label>
+                                            <input type="text" id="gpFonction" required />
+                                        </div>
+                                        <div class="field">
+                                            <label for="gpTel">Téléphone / WhatsApp *</label>
+                                            <input type="tel" id="gpTel" autocomplete="tel" required />
+                                        </div>
+                                        <div class="field">
+                                            <label for="gpEmail">Adresse e-mail *</label>
+                                            <input type="email" id="gpEmail" autocomplete="email" required />
+                                        </div>
+                                    </div>
+                                    <div class="wizard-nav">
+                                        <button type="button" class="btn btn--primary wizard-next">Continuer</button>
+                                    </div>
+                                </div>
+
+                                <!-- Étape 2 : choix du contrat GSN -->
+                                <div class="wizard-step" data-step="2">
+                                    <p class="gsn-form-step">Étape 2 / 5</p>
+                                    <h2>Quel contrat GSN souhaitez-vous souscrire ?</h2>
+                                    <p class="gsn-form-hint">Le détail complet de chaque formule est présenté dans <a href="index.html#offres">nos offres GSN</a>. Ici, aucune prestation à choisir : juste la formule qui vous intéresse.</p>
+                                    <div class="offer-pick">
+                                        <label class="offer-pick-card">
+                                            <input type="radio" name="gpContrat" value="GSN Anticip" required />
+                                            <span class="offer-pick-name">GSN Anticip</span>
+                                            <span class="offer-pick-desc">Prévenir et développer — audit renforcé, création de site web et formations incluses. Durée : 3 ans.</span>
+                                        </label>
+                                        <label class="offer-pick-card">
+                                            <input type="radio" name="gpContrat" value="GSN Tranquillité" />
+                                            <span class="offer-pick-name">GSN Tranquillité</span>
+                                            <span class="offer-pick-desc">Gérer et optimiser — supervision proactive, intégration IA et accompagnement stratégique. Durée : 6 ans.</span>
+                                        </label>
+                                        <label class="offer-pick-card" style="grid-column: 1 / -1;">
+                                            <input type="radio" name="gpContrat" value="Je souhaite être conseillé avant de choisir" />
+                                            <span class="offer-pick-name">Je souhaite être conseillé avant de choisir</span>
+                                            <span class="offer-pick-desc">Vous n'êtes pas encore sûr de la formule adaptée à votre entreprise ? Notre équipe vous accompagne dans ce choix.</span>
+                                        </label>
+                                    </div>
+                                    <div class="wizard-nav">
+                                        <button type="button" class="btn btn--outline wizard-back">Précédent</button>
+                                        <button type="button" class="btn btn--primary wizard-next">Continuer</button>
+                                    </div>
+                                </div>
+
+                                <!-- Étape 3 : inventaire informatique -->
+                                <div class="wizard-step" data-step="3">
+                                    <p class="gsn-form-step">Étape 3 / 5</p>
+                                    <h2>Inventaire de vos équipements informatiques</h2>
+                                    <p class="gsn-form-hint">Afin de nous permettre d'évaluer votre environnement informatique et de préparer une proposition adaptée, veuillez renseigner les principaux équipements dont dispose votre entreprise. Un décompte global suffit à ce stade — pas besoin du détail (marque, modèle…), notre équipe reviendra vers vous pour les informations techniques complémentaires.</p>
+
+                                    <div class="inventory-group">
+                                        <p class="inventory-group-title">Ordinateurs</p>
+                                        <div class="field-grid">
+                                            <div class="field field-stepper">
+                                                <label for="gpOrdiBureau">Ordinateurs de bureau</label>
+                                                <div class="stepper">
+                                                    <button type="button" class="stepper-btn" data-target="gpOrdiBureau" data-step="-1" aria-label="Diminuer">−</button>
+                                                    <input type="number" id="gpOrdiBureau" class="stepper-input" min="0" max="999" value="0" inputmode="numeric" />
+                                                    <button type="button" class="stepper-btn" data-target="gpOrdiBureau" data-step="1" aria-label="Augmenter">+</button>
+                                                </div>
+                                            </div>
+                                            <div class="field field-stepper">
+                                                <label for="gpOrdiPortable">Ordinateurs portables</label>
+                                                <div class="stepper">
+                                                    <button type="button" class="stepper-btn" data-target="gpOrdiPortable" data-step="-1" aria-label="Diminuer">−</button>
+                                                    <input type="number" id="gpOrdiPortable" class="stepper-input" min="0" max="999" value="0" inputmode="numeric" />
+                                                    <button type="button" class="stepper-btn" data-target="gpOrdiPortable" data-step="1" aria-label="Augmenter">+</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="inventory-group">
+                                        <p class="inventory-group-title">Imprimantes</p>
+                                        <div class="field-grid">
+                                            <div class="field field-stepper">
+                                                <label for="gpImprimantes">Imprimante laser</label>
+                                                <div class="stepper">
+                                                    <button type="button" class="stepper-btn" data-target="gpImprimantes" data-step="-1" aria-label="Diminuer">−</button>
+                                                    <input type="number" id="gpImprimantes" class="stepper-input" min="0" max="999" value="0" inputmode="numeric" />
+                                                    <button type="button" class="stepper-btn" data-target="gpImprimantes" data-step="1" aria-label="Augmenter">+</button>
+                                                </div>
+                                            </div>
+                                            <div class="field field-stepper">
+                                                <label for="gpMultifonctions">Imprimante à jet d'encre</label>
+                                                <div class="stepper">
+                                                    <button type="button" class="stepper-btn" data-target="gpMultifonctions" data-step="-1" aria-label="Diminuer">−</button>
+                                                    <input type="number" id="gpMultifonctions" class="stepper-input" min="0" max="999" value="0" inputmode="numeric" />
+                                                    <button type="button" class="stepper-btn" data-target="gpMultifonctions" data-step="1" aria-label="Augmenter">+</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="inventory-group">
+                                        <p class="inventory-group-title">Équipements réseau</p>
+                                        <div class="field-grid">
+                                            <div class="field field-stepper">
+                                                <label for="gpRouteurs">Routeurs</label>
+                                                <div class="stepper">
+                                                    <button type="button" class="stepper-btn" data-target="gpRouteurs" data-step="-1" aria-label="Diminuer">−</button>
+                                                    <input type="number" id="gpRouteurs" class="stepper-input" min="0" max="999" value="0" inputmode="numeric" />
+                                                    <button type="button" class="stepper-btn" data-target="gpRouteurs" data-step="1" aria-label="Augmenter">+</button>
+                                                </div>
+                                            </div>
+                                            <div class="field field-stepper">
+                                                <label for="gpSwitches">Switches</label>
+                                                <div class="stepper">
+                                                    <button type="button" class="stepper-btn" data-target="gpSwitches" data-step="-1" aria-label="Diminuer">−</button>
+                                                    <input type="number" id="gpSwitches" class="stepper-input" min="0" max="999" value="0" inputmode="numeric" />
+                                                    <button type="button" class="stepper-btn" data-target="gpSwitches" data-step="1" aria-label="Augmenter">+</button>
+                                                </div>
+                                            </div>
+                                            <div class="field field-stepper">
+                                                <label for="gpWifi">Points d'accès Wi-Fi</label>
+                                                <div class="stepper">
+                                                    <button type="button" class="stepper-btn" data-target="gpWifi" data-step="-1" aria-label="Diminuer">−</button>
+                                                    <input type="number" id="gpWifi" class="stepper-input" min="0" max="999" value="0" inputmode="numeric" />
+                                                    <button type="button" class="stepper-btn" data-target="gpWifi" data-step="1" aria-label="Augmenter">+</button>
+                                                </div>
+                                            </div>
+                                            <div class="field field-stepper">
+                                                <label for="gpBaies">Baies / coffrets réseau</label>
+                                                <div class="stepper">
+                                                    <button type="button" class="stepper-btn" data-target="gpBaies" data-step="-1" aria-label="Diminuer">−</button>
+                                                    <input type="number" id="gpBaies" class="stepper-input" min="0" max="999" value="0" inputmode="numeric" />
+                                                    <button type="button" class="stepper-btn" data-target="gpBaies" data-step="1" aria-label="Augmenter">+</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="inventory-group">
+                                        <p class="inventory-group-title">Serveurs</p>
+                                        <div class="field-grid">
+                                            <div class="field field-stepper">
+                                                <label for="gpServeursPhysiques">Serveurs physiques</label>
+                                                <div class="stepper">
+                                                    <button type="button" class="stepper-btn" data-target="gpServeursPhysiques" data-step="-1" aria-label="Diminuer">−</button>
+                                                    <input type="number" id="gpServeursPhysiques" class="stepper-input" min="0" max="999" value="0" inputmode="numeric" />
+                                                    <button type="button" class="stepper-btn" data-target="gpServeursPhysiques" data-step="1" aria-label="Augmenter">+</button>
+                                                </div>
+                                            </div>
+                                            <div class="field field-stepper">
+                                                <label for="gpServeursNas">Serveurs NAS / stockage réseau</label>
+                                                <div class="stepper">
+                                                    <button type="button" class="stepper-btn" data-target="gpServeursNas" data-step="-1" aria-label="Diminuer">−</button>
+                                                    <input type="number" id="gpServeursNas" class="stepper-input" min="0" max="999" value="0" inputmode="numeric" />
+                                                    <button type="button" class="stepper-btn" data-target="gpServeursNas" data-step="1" aria-label="Augmenter">+</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="wizard-nav">
+                                        <button type="button" class="btn btn--outline wizard-back">Précédent</button>
+                                        <button type="button" class="btn btn--primary wizard-next">Continuer</button>
+                                    </div>
+                                </div>
+
+                                <!-- Étape 4 : autres équipements + état du parc -->
+                                <div class="wizard-step" data-step="4">
+                                    <p class="gsn-form-step">Étape 4 / 5</p>
+                                    <h2>Autres équipements à prendre en compte</h2>
+                                    <div class="equipment-row">
+                                        <label class="service-pick-item"><input type="checkbox" id="gpUpsCoche" /><span>Onduleurs / UPS</span></label>
+                                        <div class="field field-stepper">
+                                            <div class="stepper">
+                                                <button type="button" class="stepper-btn" data-target="gpUps" data-step="-1" aria-label="Diminuer">−</button>
+                                                <input type="number" id="gpUps" class="stepper-input" min="0" max="999" value="0" inputmode="numeric" aria-label="Nombre d'onduleurs / UPS" />
+                                                <button type="button" class="stepper-btn" data-target="gpUps" data-step="1" aria-label="Augmenter">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="equipment-row">
+                                        <label class="service-pick-item"><input type="checkbox" id="gpTelIpCoche" /><span>Téléphones IP</span></label>
+                                        <div class="field field-stepper">
+                                            <div class="stepper">
+                                                <button type="button" class="stepper-btn" data-target="gpTelIp" data-step="-1" aria-label="Diminuer">−</button>
+                                                <input type="number" id="gpTelIp" class="stepper-input" min="0" max="999" value="0" inputmode="numeric" aria-label="Nombre de téléphones IP" />
+                                                <button type="button" class="stepper-btn" data-target="gpTelIp" data-step="1" aria-label="Augmenter">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="equipment-row">
+                                        <label class="service-pick-item"><input type="checkbox" id="gpCaisseCoche" /><span>Terminaux de caisse</span></label>
+                                        <div class="field field-stepper">
+                                            <div class="stepper">
+                                                <button type="button" class="stepper-btn" data-target="gpCaisse" data-step="-1" aria-label="Diminuer">−</button>
+                                                <input type="number" id="gpCaisse" class="stepper-input" min="0" max="999" value="0" inputmode="numeric" aria-label="Nombre de terminaux de caisse" />
+                                                <button type="button" class="stepper-btn" data-target="gpCaisse" data-step="1" aria-label="Augmenter">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="equipment-row">
+                                        <label class="service-pick-item"><input type="checkbox" id="gpVideoCoche" /><span>Vidéoprojecteurs</span></label>
+                                        <div class="field field-stepper">
+                                            <div class="stepper">
+                                                <button type="button" class="stepper-btn" data-target="gpVideo" data-step="-1" aria-label="Diminuer">−</button>
+                                                <input type="number" id="gpVideo" class="stepper-input" min="0" max="999" value="0" inputmode="numeric" aria-label="Nombre de vidéoprojecteurs" />
+                                                <button type="button" class="stepper-btn" data-target="gpVideo" data-step="1" aria-label="Augmenter">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="field-grid" style="margin-top: var(--space-4);">
+                                        <div class="field">
+                                            <label for="gpAutrePrecision">Autres équipements informatiques ou périphériques à préciser</label>
+                                            <input type="text" id="gpAutrePrecision" placeholder="Ex. : téléphones fixes, badgeuse…" />
+                                        </div>
+                                        <div class="field field-stepper">
+                                            <label for="gpAutreQte">Quantité</label>
+                                            <div class="stepper">
+                                                <button type="button" class="stepper-btn" data-target="gpAutreQte" data-step="-1" aria-label="Diminuer">−</button>
+                                                <input type="number" id="gpAutreQte" class="stepper-input" min="0" max="999" value="0" inputmode="numeric" />
+                                                <button type="button" class="stepper-btn" data-target="gpAutreQte" data-step="1" aria-label="Augmenter">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <h2 style="margin-top: var(--space-5);">État général de votre parc informatique</h2>
+                                    <p class="gsn-form-hint">Comment évaluez-vous globalement l'état de vos équipements ?</p>
+                                    <div class="offer-pick" style="grid-template-columns: 1fr;">
+                                        <label class="offer-pick-card" style="padding: var(--space-3) var(--space-4);">
+                                            <input type="radio" name="gpEtat" value="Majoritairement récents" required />
+                                            <span class="offer-pick-name" style="font-size: 0.95rem;">Majoritairement récents</span>
+                                        </label>
+                                        <label class="offer-pick-card" style="padding: var(--space-3) var(--space-4);">
+                                            <input type="radio" name="gpEtat" value="Parc mixte" />
+                                            <span class="offer-pick-name" style="font-size: 0.95rem;">Parc mixte</span>
+                                        </label>
+                                        <label class="offer-pick-card" style="padding: var(--space-3) var(--space-4);">
+                                            <input type="radio" name="gpEtat" value="Majoritairement anciens" />
+                                            <span class="offer-pick-name" style="font-size: 0.95rem;">Majoritairement anciens</span>
+                                        </label>
+                                        <label class="offer-pick-card" style="padding: var(--space-3) var(--space-4);">
+                                            <input type="radio" name="gpEtat" value="Difficultés fréquentes / équipements à renouveler" />
+                                            <span class="offer-pick-name" style="font-size: 0.95rem;">Difficultés fréquentes / équipements à renouveler</span>
+                                        </label>
+                                        <label class="offer-pick-card" style="padding: var(--space-3) var(--space-4);">
+                                            <input type="radio" name="gpEtat" value="Je ne sais pas" />
+                                            <span class="offer-pick-name" style="font-size: 0.95rem;">Je ne sais pas</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="wizard-nav">
+                                        <button type="button" class="btn btn--outline wizard-back">Précédent</button>
+                                        <button type="button" class="btn btn--primary wizard-next">Vérifier ma demande</button>
+                                    </div>
+                                </div>
+
+                                <!-- Étape 5 : récapitulatif -->
+                                <div class="wizard-step" data-step="5">
+                                    <p class="gsn-form-step">Étape 5 / 5</p>
+                                    <h2>Récapitulatif de votre demande</h2>
+                                    <div class="wizard-recap" id="gpWizardRecap"><!-- rempli par js/site.js juste avant l'affichage de cette étape --></div>
+
+                                    <div class="hp-field" aria-hidden="true">
+                                        <label for="gpHoneypot">Ne pas remplir ce champ</label>
+                                        <input type="text" id="gpHoneypot" name="website" tabindex="-1" autocomplete="off" />
+                                    </div>
+
+                                    <div class="wizard-nav">
+                                        <button type="button" class="btn btn--outline wizard-back">Précédent</button>
+                                        <button type="submit" class="btn btn--whatsapp btn--orbit gsn-form-submit">
+                                            <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                                            Envoyer ma demande sur WhatsApp
+                                        </button>
+                                    </div>
+                                    <p class="gsn-form-hint gsn-form-hint--center">En cliquant, WhatsApp s'ouvre avec un message pré-rempli récapitulant toute votre demande : il ne vous reste plus qu'à l'envoyer.</p>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <span class="logo-word">MSIS<span>-CI</span></span>
+                        <p>Le Groupe MSIS-CI propose des solutions professionnelles adaptées aux besoins des entreprises, des institutions et des particuliers à travers sept pôles de solutions complémentaires.</p>
+                    </div>
+                    <div class="footer-col">
+                        <h3>Nos pôles de solutions</h3>
+                        <ul>
+                            <li><a href="ServcINFOR.html">Informatique &amp; Solutions numériques</a></li>
+                            <li><a href="ServcELECT.html">Sécurité &amp; Équipements électroniques</a></li>
+                            <li><a href="ServcIMPRI.html">Communication visuelle &amp; Imprimerie</a></li>
+                            <li><a href="ServcFPROF.html">Formations professionnelles</a></li>
+                            <li><a href="ServcMATIN.html">Matériel informatique</a></li>
+                            <li><a href="ServcFBURO.html">Mobilier &amp; Fournitures de bureau</a></li>
+                            <li><a href="ServcMATCO.html">Matériaux de construction &amp; ménagement</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h3>Entreprise</h3>
+                        <ul>
+                            <li><a href="Nous.html#apropos">Qui sommes-nous</a></li>
+                            <li><a href="Nous.html#valeurs">Nos valeurs</a></li>
+                            <li><a href="Partenaires.html">Nos partenaires</a></li>
+                            <li><a href="Partenaire-GSN.html">Devenir partenaire GSN</a></li>
+                            <li><a href="Partenaire-Commercial.html">Devenir partenaire commercial</a></li>
+                            <li><a href="Carriere.html">Carrières</a></li>
+                            <li><a href="http://localhost:8010" data-espace target="_blank" rel="noopener">Mon Espace</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h3>Contact</h3>
+                        <ul>
+                            <li>Quartier Bracodi, non loin de la direction générale des impôts</li>
+                            <li>03 BP 244 Abidjan 03</li>
+                            <li><a href="tel:+2252735907428">(+225) 27 359 074 28</a></li>
+                            <li><a href="https://wa.me/2250100063355" target="_blank" rel="noopener">WhatsApp : (+225) 01 00 06 33 55</a></li>
+                            <li><a href="mailto:groupemsisci@gmail.com">groupemsisci@gmail.com</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <span>© Groupe MSIS-CI 2022–2026. Tous droits réservés.</span>
+                    <span>www.msis-ci.com</span>
+                </div>
+            </div>
+        </footer>
+
+        <script src="js/config.js"></script>
+        <script src="js/site.js" defer></script>
+    </body>
+</html>
