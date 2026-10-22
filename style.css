@@ -337,8 +337,8 @@ a:focus-visible, button:focus-visible, input:focus-visible
 }
 
 #logo { display: flex; align-items: center; gap: var(--space-2); }
-#logo img { height: 48px; width: auto; transition: height var(--dur-medium) var(--ease); }
-#entete.is-scrolled #logo img { height: 40px; }
+#logo img { height: 30px; width: auto; transition: height var(--dur-medium) var(--ease); }
+#entete.is-scrolled #logo img { height: 26px; }
 #logo .logo-word { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; color: var(--color-primary); letter-spacing: 0.01em; }
 #logo .logo-word span { color: var(--color-accent); }
 
@@ -1755,7 +1755,7 @@ footer { background: var(--color-foreground); color: var(--color-text-on-dark-mu
     .nav-backdrop.is-open { opacity: 1; pointer-events: auto; }
 
     #entete, #entete.is-scrolled { height: var(--header-height-mobile); }
-    #logo img, #entete.is-scrolled #logo img { height: 40px; }
+    #logo img, #entete.is-scrolled #logo img { height: 26px; }
     .separateur { height: var(--header-height-mobile); }
     .page-hero { padding-top: calc(var(--header-height-mobile) + var(--space-6)); }
 
