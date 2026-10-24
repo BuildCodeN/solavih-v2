@@ -2129,3 +2129,20 @@ footer { background: var(--color-foreground); color: var(--color-text-on-dark-mu
 
 /* Champ piège anti-robot du formulaire GSN : hors écran, jamais visible ni annoncé. */
 .hp-field { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+
+/* Mesure d'audience (voir Confidentialite.html) : lien du pied de page et encadré du choix « ne plus être compté ». */
+.footer-bottom a { color: var(--color-text-on-dark-muted); text-decoration: underline; text-underline-offset: 3px; transition: color var(--dur-fast) var(--ease); }
+.footer-bottom a:hover { color: var(--color-text-on-dark); }
+.mesure-choix {
+    margin-top: var(--space-4);
+    padding: var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+.mesure-choix p { margin: 0; font-weight: 500; }

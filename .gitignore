@@ -2,3 +2,6 @@
 *.tmp
 Thumbs.db
 .DS_Store
+
+# Mesure d'audience : dossier de repli des données (jamais dans le dépôt)
+suivi/donnees/

@@ -1,0 +1,63 @@
+MESURE D'AUDIENCE DU SITE GROUPE MSIS-CI
+========================================
+
+À quoi ça sert
+  Savoir combien de personnes visitent le site, quelles pages et quelles rubriques les intéressent, sur quoi elles
+  cliquent (WhatsApp, téléphone, documents), d'où elles viennent, et préparer un rapport de fréquentation périodique.
+
+Ce qui est mesuré / ce qui ne l'est jamais
+  Mesuré : pages vues, temps passé, rubriques lues, clics de contact et de documents, formulaire commencé / envoyé,
+  type d'appareil, langue, site d'origine.
+  Jamais : cookie, adresse IP conservée, contenu d'un formulaire, nom, e-mail ou numéro saisi. Les visiteurs qui
+  envoient « Ne pas me suivre » (DNT / GPC), les robots et les appareils exclus ne sont pas comptés.
+  Les visiteurs sont informés sur la page Confidentialite.html (lien dans le pied de page de chaque page).
+
+Fichiers
+  js/frequentation.js    script du navigateur (envoie de petits événements à suivi/mesure.php)
+  suivi/lib.php          stockage, anonymat, contrôles (chargé à chaque mesure)
+  suivi/mesure.php       reçoit les événements (répond toujours « 204 sans contenu »)
+  suivi/analyse.php      calculs : visites, pages, sources, pistes d'amélioration
+  suivi/tableau.php      tableau de bord privé (clé nécessaire)
+  suivi/export.php       export JSON / CSV pour le rapport (clé nécessaire)
+  suivi/installer.php    mise en service, une seule fois (code d'installation nécessaire)
+  Confidentialite.html   information des visiteurs et bouton « ne plus me compter »
+  robots.txt             demande aux moteurs de recherche d'ignorer /suivi/
+
+Où sont les données
+  Dans un dossier « suivi_donnees » créé À CÔTÉ du dossier public du site (donc inaccessible depuis Internet) ; si le
+  serveur ne le permet pas, dans suivi/donnees (fermé par .htaccess et par la première ligne « <?php exit; ?> » de
+  chaque fichier). Un fichier par jour, une ligne par événement. Effacement automatique au bout de 24 mois.
+  Le « code visiteur » de chaque événement est calculé avec un sel tiré au hasard et détruit au bout de deux jours :
+  il ne peut plus être relié à une adresse IP, et un visiteur n'est jamais suivi d'un jour à l'autre.
+
+Mise en service (une seule fois)
+  1. Publier le site (git push).
+  2. Envoyer au serveur le code d'installation (POST sur suivi/installer.php, champ « code »). La clé du tableau de
+     bord est renvoyée UNE seule fois ; seule son empreinte reste sur le serveur.
+  3. Ouvrir suivi/tableau.php?cle=… : la clé est mémorisée dans un cookie réservé à ce dossier, puis retirée de l'adresse.
+  Le dépôt Git ne contient que l'empreinte du code d'installation, jamais le code ni la clé.
+  Perte de la clé : renvoyer le code d'installation avec regenerer=1 (l'ancienne clé cesse de fonctionner).
+
+Essais
+  Ouvrir une page avec ?mesure=essai à la fin de l'adresse : les événements de cet onglet sont marqués « essai » et ne
+  comptent pas (case « avec les essais » du tableau pour les voir ; bouton « Effacer les essais » pour les supprimer).
+  Pour ne plus compter ses propres visites : ouvrir Confidentialite.html?mesure=non sur chaque appareil.
+
+Liens suivis
+  Le tableau de bord contient un générateur de liens (utm_source, utm_medium, utm_campaign) à mettre sur chaque flyer,
+  statut WhatsApp ou publication : on voit ensuite quelle source amène des visiteurs et des contacts.
+
+Rapport périodique
+  ANALYSE_SITE/outils/frequentation.py (hors dépôt, sur l'ordinateur du propriétaire) télécharge l'export, fabrique le
+  rapport Word (chiffres, graphiques, pistes d'amélioration) et le range dans ANALYSE_SITE/rapports.
+
+Changer d'hébergeur
+  Copier le dossier « suivi_donnees » (à côté du dossier public) vers le nouvel hébergeur, au même endroit, puis rejouer
+  la mise en service (la clé est recréée avec le code d'installation). Les statistiques déjà recueillies sont conservées.
+
+Limites à connaître
+  - Sans cookie, un « visiteur » est une estimation : un même appareil qui revient un autre jour est recompté, et deux
+    personnes qui partagent la même connexion et le même modèle de téléphone peuvent être comptées pour une seule.
+  - Le point d'entrée de la mesure est public : quelqu'un de malveillant peut y envoyer de faux événements. Le nombre
+    d'événements par visiteur et par jour est plafonné et les données ne sont jamais interprétées comme du code.
+  - Compatible PHP 7.2 et plus. Aucune base de données, aucune bibliothèque externe.

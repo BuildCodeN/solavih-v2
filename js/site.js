@@ -6,6 +6,12 @@
     var prefersReducedMotion = window.matchMedia &&
         window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    /* Mesure d'audience (js/frequentation.js) : signale seulement QU'un formulaire a été envoyé,
+       jamais son contenu. La mesure ne doit en aucun cas gêner un formulaire. */
+    function signalerEnvoi(nom) {
+        try { if (window.MSIS_MESURE) window.MSIS_MESURE.formulaire(nom, 'envoi'); } catch (err) { /* sans effet */ }
+    }
+
     /* ---------- Liens vers l'espace privé « Mon Espace » ----------
        L'adresse vient de js/config.js (une seule valeur à changer au déploiement).
        Un lien porte data-espace="/chemin" (ou data-espace vide pour la racine) :
@@ -424,6 +430,7 @@
                 if (boutonEnvoi) boutonEnvoi.classList.add('is-loading');
 
                 var ouvrirWhatsapp = function (numero) {
+                    signalerEnvoi('gsnForm');
                     if (boutonEnvoi) boutonEnvoi.classList.remove('is-loading');
                     var texte = encodeURIComponent(construireMessage(numero));
                     var url = 'https://wa.me/2250100063355?text=' + texte;
@@ -679,6 +686,7 @@
                 if (valeurChampCand('candSiteWeb')) return;
 
                 if (boutonEnvoiCand) boutonEnvoiCand.classList.add('is-loading');
+                signalerEnvoi('candidatureForm');
 
                 var fichierCv = champCv ? champCv.files[0] : null;
                 var partageFichier = partageAvecFichierPossible(fichierCv);
@@ -969,6 +977,7 @@
                 if (valeurChampGp('gpHoneypot')) return;
 
                 if (boutonEnvoiGp) boutonEnvoiGp.classList.add('is-loading');
+                signalerEnvoi('partenaireGsnForm');
                 window.open('https://wa.me/2250100063355?text=' + encodeURIComponent(construireMessageGp()), '_blank', 'noopener');
                 if (boutonEnvoiGp) boutonEnvoiGp.classList.remove('is-loading');
             });
